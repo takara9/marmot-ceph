@@ -63,7 +63,7 @@
 
     - name: Add Ceph APT repository
       apt_repository:
-        repo: deb [arch=amd64] https://download.ceph.com/debian-luminous {{ansible_distribution_release}} stable
+        repo: deb [arch=amd64] https://download.ceph.com/debian-nautilus {{ansible_distribution_release}} stable
 
     - name: Install the prerequisite packeage
       apt:

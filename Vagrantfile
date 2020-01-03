@@ -185,15 +185,6 @@ SHELL
       ansible.limit          = "master"
       ansible.inventory_path = "ansible-playbook/hosts"
     end
-
-    #machine.vm.provision "ansible_local" do |ansible|
-    #  ansible.playbook       = "ansible-playbook/heketi-node.yml"
-    #  ansible.version        = "latest"
-    #  ansible.verbose        = false
-    #  ansible.install        = false
-    #  ansible.limit          = "heketi"
-    #  ansible.inventory_path = "ansible-playbook/hosts"
-    #end
   end
 
   ## Cepf client node
@@ -216,7 +207,7 @@ SHELL
 sudo sed -i.bak -e "s%http://us.archive.ubuntu.com/ubuntu/%http://ftp.iij.ad.jp/pub/linux/ubuntu/archive/%g" /etc/apt/sources.list
 SHELL
     
-    ## Masterインストール 
+    ## Clientインストール 
     #
     machine.vm.provision "ansible_local" do |ansible|
       ansible.playbook       = "ansible-playbook/cepf-node.yml"
