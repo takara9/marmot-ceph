@@ -196,7 +196,7 @@ SHELL
     #end
   end
 
-  ## Cepf admin node
+  ## Cepf client node
   #
   config.vm.define vm_name = "client" do |machine|
     machine.vm.box = "ubuntu/bionic64"
@@ -223,12 +223,8 @@ SHELL
       ansible.version        = "latest"
       ansible.verbose        = false
       ansible.install        = true
-      ansible.limit          = "master"
+      ansible.limit          = "client"
       ansible.inventory_path = "ansible-playbook/hosts"
     end
-
-
   end
-
-
 end
