@@ -157,9 +157,9 @@ SHELL
   
   ## Ceph マスターノード
   #
-  config.vm.define vm_name = "master" do |machine|
+  config.vm.define 'master' do |machine|
     machine.vm.box = "ubuntu/bionic64"
-    machine.vm.hostname = "master"
+    machine.vm.hostname = 'master'
     machine.vm.network :private_network,ip: "172.20.1.30"
     #machine.vm.network :public_network, ip: "192.168.1.90", bridge: "en0: Ethernet"
     machine.vm.provider "virtualbox" do |vbox|
@@ -191,9 +191,9 @@ SHELL
   
   ## Ceph client node
   #
-  config.vm.define vm_name = "client" do |machine|
+  config.vm.define 'client' do |machine|
     machine.vm.box = "ubuntu/bionic64"
-    machine.vm.hostname = vm_name
+    machine.vm.hostname = 'client'
     machine.vm.network :private_network,ip: "172.20.1.29"
     #machine.vm.network :public_network, ip: "192.168.1.89", bridge: "en0: Ethernet"
     machine.vm.provider "virtualbox" do |vbox|

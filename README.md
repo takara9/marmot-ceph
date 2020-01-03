@@ -1,13 +1,14 @@
-# GlusterFS Server and Heketi Server on Vagrant
+# Ceph テスト用
 
-この Vagrant と Ansibl/e のコードは、下記の４つの仮想サーバーに　[GlusterFS](https://www.gluster.org/) と [Heketi](https://github.com/heketi/heketi)を構築して、Kuberentes クラスタのポッドからマウントして利用できるようにするものです。この仮想サーバーのIPアドレスは、仮想サーバーに割り当てられる内部通信用のIPアドレスです。
+修正中
 
-1. heketi   172.20.1.20  
-1. gluster1 172.20.1.21　
-1. gluster1 172.20.1.22
-1. gluster1 172.20.1.23
+1. master   172.20.1.30  
+1. node1    172.20.1.31　
+1. node2    172.20.1.32
+1. node3    172.20.1.33
+1. client   172.20.1.29
 
-[https://github.com/takara9/vagrant-kubernetes](https://github.com/takara9/vagrant-kubernetes)で構築するKubernetesクラスタと組み合わせて、永続ストレージのオートプロビジョニング環境のミニチュア版を構築できます。
+
 
 ## このクラスタを起動するために必要なソフトウェア
 
