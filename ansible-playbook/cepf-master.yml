@@ -1,0 +1,76 @@
+- hosts: master
+  connection: local
+  become: yes
+
+  tasks:
+    - name: Install the prerequisite packeage
+      apt:
+        name: "{{ packages }}"
+        state: present
+        update_cache: yes
+      vars:
+        packages:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - software-properties-common
+        - ntp
+        - python-apt
+
+    - name: cp id_rsa root for ssh remote command
+      template:
+        src: /vagrant/ssh/id_rsa
+        dest: /root/.ssh/id_rsa
+        mode: '0600'
+        owner: root
+        group: root
+
+    - name: cp ssh-key vagrant for remote op
+      template:
+        src:  /vagrant/ssh/id_rsa.pub
+        dest: /root/.ssh/authorized_keys
+        mode: '0600'
+        owner: root
+        group: root
+
+    - name: cp config to avoid check host at first login
+      template:
+        src: /vagrant/ssh/config
+        dest: /root/.ssh/config
+        mode: '0600'
+        owner: root
+        group: root
+
+    - name: cp id_rsa vagrant for remote op
+      template:
+        src: /vagrant/ssh/id_rsa
+        dest: /home/vagrant/.ssh/id_rsa
+        mode: '0600'
+        owner: vagrant
+        group: vagrant
+
+    - name: cp hosts for remote host
+      template:
+        src:  /vagrant/hosts
+        dest: /etc/hosts
+        mode: '0644'
+        owner: root
+        group: root
+
+
+    - name: Add Ceph GPG key
+      apt_key: url=https://download.ceph.com/keys/release.asc
+
+    - name: Add Ceph APT repository
+      apt_repository:
+        repo: deb [arch=amd64] https://download.ceph.com/debian-luminous {{ansible_distribution_release}} stable
+
+    - name: Install the prerequisite packeage
+      apt:
+        name: "{{ packages }}"
+        state: present
+        update_cache: yes
+      vars:
+        packages:
+        - ceph-deploy
+
