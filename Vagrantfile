@@ -4,7 +4,7 @@
 
 Vagrant.configure("2") do |config|
 
-  ## Cepf node 仮想マシンの起動
+  ## Ceph node 仮想マシンの起動
   #
   config.vm.define 'node1' do |machine|
     machine.vm.box = "ubuntu/bionic64"
@@ -42,9 +42,9 @@ Vagrant.configure("2") do |config|
 sudo sed -i.bak -e "s%http://us.archive.ubuntu.com/ubuntu/%http://ftp.iij.ad.jp/pub/linux/ubuntu/archive/%g" /etc/apt/sources.list
 SHELL
 
-    ## cepf インストール 
+    ## ceph インストール 
     machine.vm.provision "ansible_local" do |ansible|
-      ansible.playbook       = "ansible-playbook/cepf-node.yml"
+      ansible.playbook       = "ansible-playbook/ceph-node.yml"
       ansible.version        = "latest"
       ansible.verbose        = false
       ansible.install        = true
@@ -91,9 +91,9 @@ SHELL
 sudo sed -i.bak -e "s%http://us.archive.ubuntu.com/ubuntu/%http://ftp.iij.ad.jp/pub/linux/ubuntu/archive/%g" /etc/apt/sources.list
 SHELL
 
-    ## cepf インストール 
+    ## ceph インストール 
     machine.vm.provision "ansible_local" do |ansible|
-      ansible.playbook       = "ansible-playbook/cepf-node.yml"
+      ansible.playbook       = "ansible-playbook/ceph-node.yml"
       ansible.version        = "latest"
       ansible.verbose        = false
       ansible.install        = true
@@ -142,9 +142,9 @@ SHELL
 sudo sed -i.bak -e "s%http://us.archive.ubuntu.com/ubuntu/%http://ftp.iij.ad.jp/pub/linux/ubuntu/archive/%g" /etc/apt/sources.list
 SHELL
 
-    ## cepf インストール 
+    ## ceph インストール 
     machine.vm.provision "ansible_local" do |ansible|
-      ansible.playbook       = "ansible-playbook/cepf-node.yml"
+      ansible.playbook       = "ansible-playbook/ceph-node.yml"
       ansible.version        = "latest"
       ansible.verbose        = false
       ansible.install        = true
@@ -155,11 +155,11 @@ SHELL
 
 
   
-  ## Cepf admin node
+  ## Ceph マスターノード
   #
   config.vm.define vm_name = "master" do |machine|
     machine.vm.box = "ubuntu/bionic64"
-    machine.vm.hostname = vm_name
+    machine.vm.hostname = "master"
     machine.vm.network :private_network,ip: "172.20.1.30"
     #machine.vm.network :public_network, ip: "192.168.1.90", bridge: "en0: Ethernet"
     machine.vm.provider "virtualbox" do |vbox|
@@ -178,7 +178,7 @@ SHELL
     ## Masterインストール 
     #
     machine.vm.provision "ansible_local" do |ansible|
-      ansible.playbook       = "ansible-playbook/cepf-master.yml"
+      ansible.playbook       = "ansible-playbook/ceph-master.yml"
       ansible.version        = "latest"
       ansible.verbose        = false
       ansible.install        = true
@@ -187,7 +187,9 @@ SHELL
     end
   end
 
-  ## Cepf client node
+
+  
+  ## Ceph client node
   #
   config.vm.define vm_name = "client" do |machine|
     machine.vm.box = "ubuntu/bionic64"
@@ -210,7 +212,7 @@ SHELL
     ## Clientインストール 
     #
     machine.vm.provision "ansible_local" do |ansible|
-      ansible.playbook       = "ansible-playbook/cepf-node.yml"
+      ansible.playbook       = "ansible-playbook/ceph-node.yml"
       ansible.version        = "latest"
       ansible.verbose        = false
       ansible.install        = true
