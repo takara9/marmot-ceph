@@ -23,7 +23,8 @@ Vagrant.configure("2") do |config|
            'createmedium', 'disk',
            '--filename', vdisk,
            '--format', 'VDI',
-           '--size', "1000GB" ]
+           '--size', 102400 ]
+           # 1024 * 100 = 100GB 
       end
       # ATTACH DISK
       vbox.customize [
@@ -71,7 +72,8 @@ SHELL
            'createmedium', 'disk',
            '--filename', vdisk,
            '--format', 'VDI',
-           '--size', "1000GB" ]
+           '--size', 102400 ]
+           # 1024 * 100 = 100GB 
       end
       # ATTACH DISK
       vbox.customize [
@@ -121,7 +123,8 @@ SHELL
            'createmedium', 'disk',
            '--filename', vdisk,
            '--format', 'VDI',
-           '--size', "1000GB" ]
+           '--size', 102400 ]
+           # 1024 * 100 = 100GB 
       end
       # ATTACH DISK
       vbox.customize [
