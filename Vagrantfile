@@ -161,7 +161,7 @@ SHELL
     machine.vm.box = "ubuntu/bionic64"
     machine.vm.hostname = 'master'
     machine.vm.network :private_network,ip: "172.20.1.30"
-    #machine.vm.network :public_network, ip: "192.168.1.90", bridge: "en0: Ethernet"
+    machine.vm.network :public_network, ip: "192.168.1.90", bridge: "en0: Ethernet"
     machine.vm.provider "virtualbox" do |vbox|
       vbox.gui = false        
       vbox.cpus = 1

@@ -61,9 +61,11 @@
     - name: Add Ceph GPG key
       apt_key: url=https://download.ceph.com/keys/release.asc
 
+    #repo: deb [arch=amd64] https://download.ceph.com/debian-nautilus/ {{ansible_distribution_release}} main
+
     - name: Add Ceph APT repository
       apt_repository:
-        repo: deb [arch=amd64] https://download.ceph.com/debian-nautilus/ {{ansible_distribution_release}} main
+        repo: deb https://download.ceph.com/debian-nautilus/ {{ansible_distribution_release}} main
 
     - name: Install the prerequisite packeage
       apt:
@@ -73,6 +75,7 @@
       vars:
         packages:
         - ceph-deploy
+        - ceph-mgr-dashboard
 
     ## Cephのセットアップ
     - name: ceph cluster member
@@ -125,7 +128,7 @@
 
     ## マネージャーデーモン と メタデータサーバーの生成
     - name: create mgr
-      command: ceph-deploy mgr create node1
+      command: ceph-deploy mgr create master
       args:
         chdir: /home/vagrant
 
@@ -141,19 +144,19 @@
         chdir: /home/vagrant
 
     - name: create pool for object storage
-      command: ceph osd pool create pool01 10
+      command: ceph osd pool create obj_data 10
       args:
         chdir: /home/vagrant
 
     - name: map pool object
-      command: ceph osd map pool01 obj01
+      command: ceph osd map obj_data obj01
       args:
         chdir: /home/vagrant
 
 
     ## ブロックストレージのプール作成
     - name: create pool for block storage
-      command: ceph osd pool create pool02 10
+      command: ceph osd pool create blk_data 10
       args:
         chdir: /home/vagrant
 
@@ -173,4 +176,21 @@
       command: ceph fs new cephfs cephfs_metadata cephfs_data
       args:
         chdir: /home/vagrant
+
+    ## ダッシュボードの設定
+    - name: Enable dashboard
+      command: ceph mgr module enable dashboard
+      args:
+        chdir: /home/vagrant
+
+    - name: Create self-signed certificate
+      command: ceph dashboard create-self-signed-cert
+      args:
+        chdir: /home/vagrant
+
+    - name: Set user/password & role
+      command: ceph dashboard ac-user-create admin password administrator
+      args: 
+        chdir: /home/vagrant
+
 
