@@ -13,8 +13,8 @@ Vagrant.configure("2") do |config|
     #machine.vm.network :public_network, ip: "192.168.1.91", bridge: "en0: Ethernet"
     machine.vm.provider "virtualbox" do |vbox|
       vbox.gui = false        
-      vbox.cpus = 1
-      vbox.memory = 1024
+      vbox.cpus = 2
+      vbox.memory = 4096
       # DISK
       vdisk = "vdisk/sdb-1.vdi"
       # CREATE DISK
@@ -62,8 +62,8 @@ SHELL
     #machine.vm.network :public_network, ip: "192.168.1.92", bridge: "en0: Ethernet"
     machine.vm.provider "virtualbox" do |vbox|
       vbox.gui = false        
-      vbox.cpus = 1
-      vbox.memory = 1024
+      vbox.cpus = 2
+      vbox.memory = 4096
       # DISK
       vdisk = "vdisk/sdb-2.vdi"
       # CREATE DISK
@@ -113,8 +113,8 @@ SHELL
     #machine.vm.network :public_network, ip: "192.168.1.93", bridge: "en0: Ethernet"
     machine.vm.provider "virtualbox" do |vbox|
       vbox.gui = false        
-      vbox.cpus = 1
-      vbox.memory = 1024
+      vbox.cpus = 2
+      vbox.memory = 4096
       # DISK
       vdisk = "vdisk/sdb-3.vdi"
       # CREATE DISK
@@ -194,8 +194,8 @@ SHELL
   config.vm.define 'client' do |machine|
     machine.vm.box = "ubuntu/bionic64"
     machine.vm.hostname = 'client'
-    machine.vm.network :private_network,ip: "172.20.1.29"
-    #machine.vm.network :public_network, ip: "192.168.1.89", bridge: "en0: Ethernet"
+    machine.vm.network :private_network,ip: "172.20.1.229"
+    #machine.vm.network :public_network, ip: "192.168.1.229", bridge: "en0: Ethernet"
     machine.vm.provider "virtualbox" do |vbox|
       vbox.gui = false        
       vbox.cpus = 1

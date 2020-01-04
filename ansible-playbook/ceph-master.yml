@@ -57,13 +57,13 @@
         owner: root
         group: root
 
-
+    ## ceph-deploy のインストール
     - name: Add Ceph GPG key
       apt_key: url=https://download.ceph.com/keys/release.asc
 
     - name: Add Ceph APT repository
       apt_repository:
-        repo: deb [arch=amd64] https://download.ceph.com/debian-nautilus {{ansible_distribution_release}} stable
+        repo: deb [arch=amd64] https://download.ceph.com/debian-nautilus/ {{ansible_distribution_release}} main
 
     - name: Install the prerequisite packeage
       apt:
@@ -73,4 +73,104 @@
       vars:
         packages:
         - ceph-deploy
+
+    ## Cephのセットアップ
+    - name: ceph cluster member
+      command: ceph-deploy new master node1 node2 node3
+      args:
+        chdir: /home/vagrant
+
+    - name: intall ceph package to cluster member
+      command: ceph-deploy install --release nautilus master node1 node2 node3
+      args:
+        chdir: /home/vagrant
+
+    - name: create monitor 
+      command: ceph-deploy mon create node1 node2 node3
+      args:
+        chdir: /home/vagrant
+
+    - name: setup monitor
+      command: ceph-deploy mon create-initial 
+      args:
+        chdir: /home/vagrant
+
+    - name: gather keys
+      command: ceph-deploy gatherkeys node1 node2 node3
+      args:
+        chdir: /home/vagrant
+
+
+    ## ストレージのセットアップ
+    - name: setup storage node1
+      command: ceph-deploy osd create --data /dev/sdc node1
+      args:
+        chdir: /home/vagrant
+
+    - name: setup storage node2
+      command: ceph-deploy osd create --data /dev/sdc node2
+      args:
+        chdir: /home/vagrant
+
+    - name: setup storage node3
+      command: ceph-deploy osd create --data /dev/sdc node3
+      args:
+        chdir: /home/vagrant
+
+    ## 設定情報の配布
+    - name: setup admin
+      command: ceph-deploy admin master node1 node2 node3
+      args:
+        chdir: /home/vagrant
+
+    ## マネージャーデーモン と メタデータサーバーの生成
+    - name: create mgr
+      command: ceph-deploy mgr create node1
+      args:
+        chdir: /home/vagrant
+
+    - name: create mds
+      command: ceph-deploy mds create node1
+      args:
+        chdir: /home/vagrant
+
+    ## オブジェクトゲートウェイの生成
+    - name: create rgw
+      command: ceph-deploy rgw create node1
+      args:
+        chdir: /home/vagrant
+
+    - name: create pool for object storage
+      command: ceph osd pool create pool01 10
+      args:
+        chdir: /home/vagrant
+
+    - name: map pool object
+      command: ceph osd map pool01 obj01
+      args:
+        chdir: /home/vagrant
+
+
+    ## ブロックストレージのプール作成
+    - name: create pool for block storage
+      command: ceph osd pool create pool02 10
+      args:
+        chdir: /home/vagrant
+
+
+    ## ファイルストレージの設定
+    - name: create pool for file storage
+      command: ceph osd pool create cephfs_data 10
+      args:
+        chdir: /home/vagrant
+
+    - name: create pool fs metadata
+      command: ceph osd pool create cephfs_metadata 1
+      args:
+        chdir: /home/vagrant
+
+    - name: create cephfs
+      command: ceph fs new cephfs cephfs_metadata cephfs_data
+      args:
+        chdir: /home/vagrant
 
