@@ -4,7 +4,7 @@
 
 Vagrant.configure("2") do |config|
 
-  ## Ceph node 仮想マシンの起動
+  ## Cephノード 仮想マシンの起動 #1
   #
   config.vm.define 'node1' do |machine|
     machine.vm.box = "ubuntu/bionic64"
@@ -13,8 +13,8 @@ Vagrant.configure("2") do |config|
     #machine.vm.network :public_network, ip: "192.168.1.91", bridge: "en0: Ethernet"
     machine.vm.provider "virtualbox" do |vbox|
       vbox.gui = false        
-      vbox.cpus = 2
-      vbox.memory = 4096
+      vbox.cpus = 1
+      vbox.memory = 1536
       # DISK
       vdisk = "vdisk/sdb-1.vdi"
       # CREATE DISK
@@ -42,7 +42,7 @@ Vagrant.configure("2") do |config|
 sudo sed -i.bak -e "s%http://us.archive.ubuntu.com/ubuntu/%http://ftp.iij.ad.jp/pub/linux/ubuntu/archive/%g" /etc/apt/sources.list
 SHELL
 
-    ## ceph インストール 
+    ## deploy-cephでリモート操作する為の設定
     machine.vm.provision "ansible_local" do |ansible|
       ansible.playbook       = "ansible-playbook/ceph-node.yml"
       ansible.version        = "latest"
@@ -54,7 +54,8 @@ SHELL
   end
 
 
-
+  ## Cephノード 仮想マシンの起動 #2
+  #
   config.vm.define 'node2' do |machine|
     machine.vm.box = "ubuntu/bionic64"
     machine.vm.hostname = 'node2'
@@ -62,8 +63,8 @@ SHELL
     #machine.vm.network :public_network, ip: "192.168.1.92", bridge: "en0: Ethernet"
     machine.vm.provider "virtualbox" do |vbox|
       vbox.gui = false        
-      vbox.cpus = 2
-      vbox.memory = 4096
+      vbox.cpus = 1
+      vbox.memory = 1536
       # DISK
       vdisk = "vdisk/sdb-2.vdi"
       # CREATE DISK
@@ -91,7 +92,8 @@ SHELL
 sudo sed -i.bak -e "s%http://us.archive.ubuntu.com/ubuntu/%http://ftp.iij.ad.jp/pub/linux/ubuntu/archive/%g" /etc/apt/sources.list
 SHELL
 
-    ## ceph インストール 
+    ## deploy-cephでリモート操作する為の設定
+    #
     machine.vm.provision "ansible_local" do |ansible|
       ansible.playbook       = "ansible-playbook/ceph-node.yml"
       ansible.version        = "latest"
@@ -102,10 +104,8 @@ SHELL
     end
   end
 
-
-  
-
-
+  ## Cephノード 仮想マシンの起動 #3
+  #
   config.vm.define 'node3' do |machine|
     machine.vm.box = "ubuntu/bionic64"
     machine.vm.hostname = 'node3'
@@ -113,8 +113,8 @@ SHELL
     #machine.vm.network :public_network, ip: "192.168.1.93", bridge: "en0: Ethernet"
     machine.vm.provider "virtualbox" do |vbox|
       vbox.gui = false        
-      vbox.cpus = 2
-      vbox.memory = 4096
+      vbox.cpus = 1
+      vbox.memory = 1536
       # DISK
       vdisk = "vdisk/sdb-3.vdi"
       # CREATE DISK
@@ -142,7 +142,7 @@ SHELL
 sudo sed -i.bak -e "s%http://us.archive.ubuntu.com/ubuntu/%http://ftp.iij.ad.jp/pub/linux/ubuntu/archive/%g" /etc/apt/sources.list
 SHELL
 
-    ## ceph インストール 
+    ## ノード間連携のセットアップ
     machine.vm.provision "ansible_local" do |ansible|
       ansible.playbook       = "ansible-playbook/ceph-node.yml"
       ansible.version        = "latest"
@@ -155,7 +155,7 @@ SHELL
 
 
   
-  ## Ceph マスターノード
+  ## Ceph管理ノード
   #
   config.vm.define 'master' do |machine|
     machine.vm.box = "ubuntu/bionic64"
@@ -175,7 +175,7 @@ SHELL
 sudo sed -i.bak -e "s%http://us.archive.ubuntu.com/ubuntu/%http://ftp.iij.ad.jp/pub/linux/ubuntu/archive/%g" /etc/apt/sources.list
 SHELL
     
-    ## Masterインストール 
+    ## ceph-deployインストール他
     #
     machine.vm.provision "ansible_local" do |ansible|
       ansible.playbook       = "ansible-playbook/ceph-master.yml"
@@ -189,7 +189,7 @@ SHELL
 
 
   
-  ## Ceph client node
+  ## Cephクライアントノード
   #
   config.vm.define 'client' do |machine|
     machine.vm.box = "ubuntu/bionic64"
@@ -209,7 +209,7 @@ SHELL
 sudo sed -i.bak -e "s%http://us.archive.ubuntu.com/ubuntu/%http://ftp.iij.ad.jp/pub/linux/ubuntu/archive/%g" /etc/apt/sources.list
 SHELL
     
-    ## Clientインストール 
+    ## deploy-cephでリモート操作する為の設定
     #
     machine.vm.provision "ansible_local" do |ansible|
       ansible.playbook       = "ansible-playbook/ceph-node.yml"
