@@ -64,12 +64,16 @@ MacやWindowsのパソコン内で起動した場合は、https://172.20.1.30:84
 以下のコマンでは、`client`というホストに対して、Cephのバージョン Nautilus をリモートインストールします。そして、次のコマンドで、設定情報をコピーして、Cephクラスタにアクセスできるようにします。
 
 ~~~
+maho:cepf maho$ vagrant ssh master
+Welcome to Ubuntu 18.04.3 LTS (GNU/Linux 4.15.0-72-generic x86_64)
+<中略>
+
+vagrant@master:~$ sudo -s
 root@master:~# ceph-deploy install --release nautilus client
 root@master:~# ceph-deploy admin client
 ~~~
 
 これらのコマンドによって、クライアントのノードから、cephのコマンドが実行できるようになります。とっても簡単ですね。
-
 
 
 
@@ -80,6 +84,11 @@ Cephはパソコンやサーバーなどの内臓ディスクと同じように�
 論理ボリュームの作成lv0は、既に作成済みのプール blk_dataを指定して作成した後、ローカルマシンのデバイスとして対応づけます。次に、ファイルシステムとしてフォーマットして準備完了です。
 
 ~~~
+maho:cepf maho$ vagrant ssh client
+Welcome to Ubuntu 18.04.3 LTS (GNU/Linux 4.15.0-72-generic x86_64)
+<中略>
+
+vagrant@client:~$ sudo -s
 root@client:~# rbd create lv0 --size 4096 --image-feature layering -p blk_data
 root@client:~# rbd map lv0 -p blk_data
 /dev/rbd0
@@ -104,19 +113,17 @@ Filesystem      Size  Used Avail Use% Mounted on
 Cephfsにアクセスするためのキーを表示して、クライアント側にファイルを作成します。
 
 ~~~
-tkr@luigi:~/vagrant-ceph$ vagrant ssh cat ceph.client.admin.keyring
+tkr@luigi:~/vagrant-ceph$ vagrant ssh master -c "cat ceph.client.admin.keyring"
 [client.admin]
 	key = AQCR9w9eyY/4EhAAPoVbB412QsC58KxzIv3ABg==
-	caps mds = "allow *"
-	caps mgr = "allow *"
-	caps mon = "allow *"
-	caps osd = "allow *"
+<以下省略>
 ~~~
 
 ファイル名は特に何でも良いのですが、`admin.secret`としておきます。
 
 ~~~
 tkr@luigi:~/vagrant-ceph$ vagrant ssh client
+vagrant@client:~$ sudo -
 root@client:~# vi admin.secret
 root@client:~# cat admin.secret 
 AQCR9w9eyY/4EhAAPoVbB412QsC58KxzIv3ABg==
@@ -125,6 +132,7 @@ AQCR9w9eyY/4EhAAPoVbB412QsC58KxzIv3ABg==
 次は、鍵ファイルを指定してマウントすることができます。node1は予め/etc/hostsに登録してあるので、他に設定は必要ありません。
 
 ~~~
+root@client:~# mkdir /mnt/fs
 root@client:~# mount -t ceph node1:6789:/ /mnt/fs -o name=admin,secretfile=admin.secret
 
 root@client:~# df -h
