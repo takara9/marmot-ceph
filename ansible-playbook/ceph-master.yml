@@ -160,6 +160,11 @@
       args:
         chdir: /home/vagrant
 
+    - name: set crush tunables values
+      command: ceph osd crush tunables hammer
+      args:
+        chdir: /home/vagrant
+
 
     ## ファイルストレージの設定
     - name: create pool for file storage
