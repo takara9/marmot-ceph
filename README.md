@@ -113,7 +113,7 @@ Filesystem      Size  Used Avail Use% Mounted on
 Cephfsにアクセスするためのキーを表示して、クライアント側にファイルを作成します。
 
 ~~~
-tkr@luigi:~/vagrant-ceph$ vagrant ssh master -c "cat ceph.client.admin.keyring"
+tkr@luigi:~/vagrant-ceph$ vagrant ssh master -c "sudo cat ceph.client.admin.keyring"
 [client.admin]
 	key = AQCR9w9eyY/4EhAAPoVbB412QsC58KxzIv3ABg==
 <以下省略>
