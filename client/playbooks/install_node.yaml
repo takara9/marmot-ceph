@@ -1,22 +1,11 @@
-- hosts: all
-  become: yes
-
+- name: Install Ceph Client Package
+  hosts: all
+  gather_facts: true
+  become: true
+  roles:
   tasks:
-    - name: Install the prerequisite packeage
-      apt:
-        name: "{{ packages }}"
-        state: present
-        update_cache: yes
-      vars:
-        packages:
-        - apt-transport-https
-        - ca-certificates
-        - curl
-        - software-properties-common
-        - ntp
-        - python-apt
-
-    - name: cp ssh-key
+    - debug: msg="{{ ansible_facts }}"
+    - name: cp ssh-key pub
       template:
         src:  /vagrant/ssh/id_rsa.pub
         dest: /root/.ssh/authorized_keys
@@ -24,6 +13,14 @@
         owner: root
         group: root
 
+    - name: cp ssh-key pri
+      template:
+        src:  /vagrant/ssh/id_rsa
+        dest: /root/.ssh/id_rsa
+        mode: '0600'
+        owner: root
+        group: root
+        
     - name: cp config to avoid check host at first login
       template:
         src: /vagrant/ssh/config
@@ -34,8 +31,10 @@
 
     - name: cp hosts 
       template:
-        src:  /vagrant/hosts
+        src:  /vagrant/ssh/hosts
         dest: /etc/hosts
         mode: '0644'
         owner: root
         group: root
+        force: yes
+        backup: yes

@@ -1,7 +1,8 @@
-- hosts: master
-  connection: local
-  become: yes
-
+- name: Install Ceph Base Package
+  hosts: all
+  gather_facts: true
+  become: true
+  roles:
   tasks:
     - name: Install the prerequisite packeage
       apt:
@@ -17,15 +18,21 @@
         - ntp
         - python-apt
 
-    - name: cp id_rsa root for ssh remote command
-      template:
-        src: /vagrant/ssh/id_rsa
-        dest: /root/.ssh/id_rsa
-        mode: '0600'
-        owner: root
-        group: root
+    - name: check ssh-key existing
+      stat:
+        path: /vagrant/ssh/id_rsa.pub
+      register: ssh_key
 
-    - name: cp ssh-key vagrant for remote op
+    - debug: msg="{{ ssh_key }}"
+
+    - name: create ssh-key
+      command: ssh-keygen -t rsa -N '' -f id_rsa
+      args:
+        executable: /bin/bash
+        chdir: /vagrant/ssh
+      when: ssh_key.stat.exists == false
+
+    - name: cp ssh-key pub
       template:
         src:  /vagrant/ssh/id_rsa.pub
         dest: /root/.ssh/authorized_keys
@@ -33,6 +40,14 @@
         owner: root
         group: root
 
+    - name: cp ssh-key pri
+      template:
+        src:  /vagrant/ssh/id_rsa
+        dest: /root/.ssh/id_rsa
+        mode: '0600'
+        owner: root
+        group: root
+        
     - name: cp config to avoid check host at first login
       template:
         src: /vagrant/ssh/config
@@ -41,27 +56,27 @@
         owner: root
         group: root
 
-    - name: cp id_rsa vagrant for remote op
+    - name: cp hosts 
       template:
-        src: /vagrant/ssh/id_rsa
-        dest: /home/vagrant/.ssh/id_rsa
-        mode: '0600'
-        owner: vagrant
-        group: vagrant
-
-    - name: cp hosts for remote host
-      template:
-        src:  /vagrant/hosts
+        src:  /vagrant/ssh/hosts
         dest: /etc/hosts
         mode: '0644'
         owner: root
         group: root
+        force: yes
+        backup: yes
 
+###################################################################
+
+- name: Configuration Ceph Cluster
+  hosts: node1
+  gather_facts: true
+  become: true
+  roles:
+  tasks:
     ## ceph-deploy のインストール
     - name: Add Ceph GPG key
       apt_key: url=https://download.ceph.com/keys/release.asc
-
-    #repo: deb [arch=amd64] https://download.ceph.com/debian-nautilus/ {{ansible_distribution_release}} main
 
     - name: Add Ceph APT repository
       apt_repository:
@@ -78,124 +93,133 @@
         - ceph-mgr-dashboard
 
     ## Cephのセットアップ
-    - name: ceph cluster member
-      command: ceph-deploy new master node1 node2 node3
+    - name: ceph cluster 
+      command: ceph-deploy new node1 node2 node3
       args:
-        chdir: /home/vagrant
+        chdir: /root
 
     - name: intall ceph package to cluster member
-      command: ceph-deploy install --release nautilus master node1 node2 node3
+      command: ceph-deploy install --release nautilus node1 node2 node3
       args:
-        chdir: /home/vagrant
+        chdir: /root
 
     - name: create monitor 
       command: ceph-deploy mon create node1 node2 node3
       args:
-        chdir: /home/vagrant
+        chdir: /root
 
     - name: setup monitor
       command: ceph-deploy mon create-initial 
       args:
-        chdir: /home/vagrant
+        chdir: /root
 
     - name: gather keys
       command: ceph-deploy gatherkeys node1 node2 node3
       args:
-        chdir: /home/vagrant
-
+        chdir: /root
 
     ## ストレージのセットアップ
     - name: setup storage node1
       command: ceph-deploy osd create --data /dev/sdc node1
       args:
-        chdir: /home/vagrant
+        chdir: /root
 
     - name: setup storage node2
       command: ceph-deploy osd create --data /dev/sdc node2
       args:
-        chdir: /home/vagrant
-
+        chdir: /root
+      
     - name: setup storage node3
       command: ceph-deploy osd create --data /dev/sdc node3
       args:
-        chdir: /home/vagrant
+        chdir: /root
 
     ## 設定情報の配布
-    - name: setup admin
-      command: ceph-deploy admin master node1 node2 node3
+    - name: ceph-deploy
+      command: ceph-deploy admin node1 node2 node3
       args:
-        chdir: /home/vagrant
+        chdir: /root
 
     ## マネージャーデーモン と メタデータサーバーの生成
     - name: create mgr
-      command: ceph-deploy mgr create master
+      command: ceph-deploy mgr create node1
       args:
-        chdir: /home/vagrant
+        chdir: /root
 
     - name: create mds
       command: ceph-deploy mds create node1
       args:
-        chdir: /home/vagrant
+        chdir: /root
 
+        
+    ## 管理クライアントのインストール
+    - name: install nautilus
+      command: ceph-deploy install --release nautilus node1 node2 node3
+      args:
+        chdir: /root
+
+    - name: install admin
+      command: ceph-deploy admin node1 node2 node3
+      args:
+        chdir: /root
+      
     ## オブジェクトゲートウェイの生成
     - name: create rgw
       command: ceph-deploy rgw create node1
       args:
-        chdir: /home/vagrant
+        chdir: /root
 
     - name: create pool for object storage
       command: ceph osd pool create obj_data 10
       args:
-        chdir: /home/vagrant
+        chdir: /root
 
     - name: map pool object
       command: ceph osd map obj_data obj01
       args:
-        chdir: /home/vagrant
-
+        chdir: /root
 
     ## ブロックストレージのプール作成
     - name: create pool for block storage
       command: ceph osd pool create blk_data 10
       args:
-        chdir: /home/vagrant
+        chdir: /root
 
     - name: set crush tunables values
       command: ceph osd crush tunables hammer
       args:
-        chdir: /home/vagrant
-
+        chdir: /root
 
     ## ファイルストレージの設定
     - name: create pool for file storage
       command: ceph osd pool create cephfs_data 10
       args:
-        chdir: /home/vagrant
+        chdir: /root
 
     - name: create pool fs metadata
       command: ceph osd pool create cephfs_metadata 1
       args:
-        chdir: /home/vagrant
+        chdir: /root
 
     - name: create cephfs
       command: ceph fs new cephfs cephfs_metadata cephfs_data
       args:
-        chdir: /home/vagrant
-
+        chdir: /root
+      
     ## ダッシュボードの設定
     - name: Enable dashboard
       command: ceph mgr module enable dashboard
       args:
-        chdir: /home/vagrant
+        chdir: /root
 
     - name: Create self-signed certificate
       command: ceph dashboard create-self-signed-cert
       args:
-        chdir: /home/vagrant
+        chdir: /root
 
     - name: Set user/password & role
       command: ceph dashboard ac-user-create admin password administrator
-      args: 
-        chdir: /home/vagrant
+      args:
+        chdir: /root
 
-
+        
