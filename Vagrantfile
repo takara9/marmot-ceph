@@ -3,7 +3,6 @@
 # vi: set ft=ruby :
 
 linux_os = "ubuntu/bionic64"   # Ubuntu 18.04
-#linux_os  = "generic/centos7"  # CentOS 7.7
 bridge_if = "en0: Wi-Fi (Wireless)"
 
 vm_spec = [
@@ -27,14 +26,6 @@ vm_spec = [
     public_ip: "192.168.1.91",
     storage: [100], playbook: "install_node.yaml",
     comment: "Ceph node #1" },
-
-#  { name: "master", cpu: 2, memory: 2048,
-#    box: linux_os,
-#    private_ip: "172.20.1.30",
-#    public_ip: "192.168.1.90",
-#    storage: [], playbook: "install_node.yaml",
-#    comment: "Ceph Master node" },
-
 ]
 
 

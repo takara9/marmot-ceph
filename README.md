@@ -1,4 +1,4 @@
-# Vagrantノード上にCephクラスタを構築するAnsible
+# 最小のCephクラスタのVagrant+Ansible
 
 
 ## 概要
@@ -6,10 +6,12 @@
 これはパソコンのVagrant上で以下のノードを起動してCephクラスタの仕組みを理解する為のコードです。
 
 ~~~
-1. node1    172.20.1.31  192.168.1.91  ストレージノード 兼
-1. node2    172.20.1.32                ストレージノード
-1. node3    172.20.1.33                ストレージノード
+1. node1    172.20.1.31  192.168.1.91  Cephノード1 兼 管理ノード
+1. node2    172.20.1.32                Cephノード2
+1. node3    172.20.1.33                Cephノード3
 ~~~
+
+
 
 
 ## このクラスタを起動するために必要なソフトウェア
@@ -20,6 +22,8 @@
 * VirtualBox (https://www.virtualbox.org/)
 * kubectl (https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 * git (https://kubernetes.io/docs/tasks/tools/install-kubectl/)
+
+
 
 
 ## 仮想マシンのホスト環境
@@ -37,6 +41,8 @@ Vagrant と VirtualBox が動作するOSが必要です。
 * CPU: Intel Core i5 以上
 
 
+
+
 ## Cephクラスタの起動手順
 
 GitHubからクローンして、Vagrantで仮想マシンを起動すると、Ansibleで自動設定します。その内容は、クラスタのノード同士が、sshで連携できる様にします。そして、ceph-deployを管理ノードにインストールして、ceph-deployのコマンドで、クラスタを構築していきます。また、ダッシュボードも自動設定します。
@@ -50,9 +56,18 @@ $ vagrant up
 ```
 
 
+
+
 ## Cephダッシュボードのアクセス
 
 MacやWindowsのパソコン内で起動した場合は、https://172.20.1.31:8443/ にアクセスすることで、Cephダッシュボードが起動します。ユーザーとパスワードは、`admin` / `password` です。また、Linux 上のVagrantで起動した場合は、https://192.168.1.91:8443/ として、パソコン上のNICにIPアドレスを追加して起動します。利用者自身のLAN環境に合わせて、Vagrantfile のIPアドレスは変更してください。
+
+
+
+
+## クライアントのセットアップ
+
+Cephクラスタが提供するストレージを利用するための学習用クライアントは、[client](client) にありますので参考に利用方法を習得できます。
 
 
 
