@@ -1,109 +1,143 @@
-# Vagrantノード上にCephクラスタを構築するAnsible
-
-
-## 概要
-
-これはパソコンのVagrant上で以下のノードを起動してCephクラスタの仕組みを理解する為のコードです。
-
-~~~
-1. node1    172.20.1.31  192.168.1.91  ストレージノード 兼
-1. node2    172.20.1.32                ストレージノード
-1. node3    172.20.1.33                ストレージノード
-~~~
-
-
-## このクラスタを起動するために必要なソフトウェア
-
-このコードを利用するためには、次のソフトウェアを必要とします。
-
-* Vagrant (https://www.vagrantup.com/)
-* VirtualBox (https://www.virtualbox.org/)
-* kubectl (https://kubernetes.io/docs/tasks/tools/install-kubectl/)
-* git (https://kubernetes.io/docs/tasks/tools/install-kubectl/)
-
-
-## 仮想マシンのホスト環境
-
-Vagrant と VirtualBox が動作するOSが必要です。
-
-* Windows10　
-* MacOS
-* Linux
-
-推奨ハードウェアとして、必要なリソースは以下です。
-
-* RAM: 16GB 以上
-* ストレージ: 空き領域 10GB 以上
-* CPU: Intel Core i5 以上
-
-
-## Cephクラスタの起動手順
-
-GitHubからクローンして、Vagrantで仮想マシンを起動すると、Ansibleで自動設定します。その内容は、クラスタのノード同士が、sshで連携できる様にします。そして、ceph-deployを管理ノードにインストールして、ceph-deployのコマンドで、クラスタを構築していきます。また、ダッシュボードも自動設定します。
-
-アクセステストのために、クライアントをセットアップして、ブロックストレージ、ファイルストレージ、オブジェクトストレージをアクセスする部分は、自動化していませんから、自身で作業する必要があります。
-
-```
-$ git clone https://github.com/takara9/vagrant-ceph
-$ cd vagrant-ceph
-$ vagrant up
-```
-
-
-## Cephダッシュボードのアクセス
-
-MacやWindowsのパソコン内で起動した場合は、https://172.20.1.31:8443/ にアクセスすることで、Cephダッシュボードが起動します。ユーザーとパスワードは、`admin` / `password` です。また、Linux 上のVagrantで起動した場合は、https://192.168.1.91:8443/ として、パソコン上のNICにIPアドレスを追加して起動します。利用者自身のLAN環境に合わせて、Vagrantfile のIPアドレスは変更してください。
+# Ceph学習用のクライアント
 
 
 
-## 検証用クライアントのセットアップ
+## 学習用クライアントの起動
 
-既にsshで連携する為の、鍵ファイルやsshの設定は完了しているので、管理用ノードにログインして、deploy-cephでリモートインストールするだけです。
-
-以下のコマンでは、`client`というホストに対して、Cephのバージョン Nautilus をリモートインストールします。そして、次のコマンドで、設定情報をコピーして、Cephクラスタにアクセスできるようにします。
+起動する前に、必ず以下のコマンドでsshのための鍵ファイルのディレクトリを、このREADME.mdが存在するディレクトリへコピーしてください。Cephのノードからリモート操作で、クライアントモジュールをインストールするために使用されます。
 
 ~~~
-maho:cepf maho$ vagrant ssh master
+cp -r ../ssh .
+~~~
+
+仮想サーバーを起動して`vagrant ssh`でログインして操作します。
+
+~~~
+vagrant up
+vagrant ssh
+~~~
+
+
+## 学習用クライアントのセットアップ
+
+もう一つターミナルを開いて、`vagrant node1` へログインして、Cephのツールをインストールします。 以下のコマンでは、`client`というホストに対して、Cephのバージョン Nautilus をリモートインストールします。そして、次のコマンドで、設定情報をコピーして、Cephクラスタにアクセスできるようにします。
+
+~~~
+$ vagrant ssh node1
 Welcome to Ubuntu 18.04.3 LTS (GNU/Linux 4.15.0-72-generic x86_64)
 <中略>
 
-vagrant@master:~$ sudo -s
-root@master:~# ceph-deploy install --release nautilus client
-root@master:~# ceph-deploy admin client
+vagrant@node1:~$ sudo -s
+root@node1:~# cd /root
+root@node1:~# ceph-deploy install --release nautilus client
+root@node1:~# ceph-deploy admin client
 ~~~
 
-これらのコマンドによって、クライアントのノードから、cephのコマンドが実行できるようになります。とっても簡単ですね。
+これらの操作によって、クライアントの仮想マシンから、cephのコマンドが実行できるようになります。
+
 
 
 
 ## Cephブロックストレージの利用
 
-Cephはパソコンやサーバーなどの内臓ディスクと同じようにアクセスする手段を提供します。その為のブロックストレージをアクセスする為のOSDとプールは作成済みなので、ここではクライアントにログインして、マウントする為のコマンドを実行するだけです。以下の操作の前に`vagrant ssh client`でクライアント役の仮想マシンにログインして、`sudo -s`で root で作業します。
+学習クライアントのターミナルから、ブロックデバイス RBD (RADOS Block Device) イメージを作成して、カーネルのデバイス名とマップすることで、ブロックデバイスとしてアクセスできるようになる。そして、ブロックデバイスにファイルシステムを作成してマウントする。
 
-論理ボリュームの作成lv0は、既に作成済みのプール blk_dataを指定して作成した後、ローカルマシンのデバイスとして対応づけます。次に、ファイルシステムとしてフォーマットして準備完了です。
+次のコマンドで、プール blk_data 上に イメージフィーチャーlayering、サイズ 4096 MB で、lv0 を作成する。
 
 ~~~
-maho:cepf maho$ vagrant ssh client
-Welcome to Ubuntu 18.04.3 LTS (GNU/Linux 4.15.0-72-generic x86_64)
+client:~ $ sudo -s
 <中略>
-
-vagrant@client:~$ sudo -s
-root@client:~# rbd create lv0 --size 4096 --image-feature layering -p blk_data
-root@client:~# rbd map lv0 -p blk_data
-/dev/rbd0
-root@client:~# mkfs.ext4 -m0 /dev/rbd/blk_data/lv0
+client:~# rbd create lv0 --size 4096 --image-feature layering -p blk_data
 ~~~
 
-マウントポイントのディレクトリを作成して、マウントします。これでアクセス可能となりました。
+Ceph上のブロックデバイスをカーネルのブロックデバイスとマッピング（対応づけ）る。
+
+~~~
+client:~# rbd map lv0 -p blk_data
+/dev/rbd0
+~~~
+
+ファイルシステムでフォーマットする。 
+
+~~~
+client:~# mkfs.ext4 -m0 /dev/rbd0
+~~~
+
+
+マウントポイントのディレクトリを作成してマウントする。これで一般のプロセスからアクセス可能となった。
 
 ~~~
 root@client:~# mkdir /mnt/blk
-root@client:~# mount /dev/rbd/blk_data/lv0 /mnt/blk
+root@client:~# mount /dev/rbd0 /mnt/blk
 root@client:~# df -h
 Filesystem      Size  Used Avail Use% Mounted on
 <中略>
 /dev/rbd0       3.9G   16M  3.9G   1% /mnt/blk
 ~~~
+
+再起動後は 'rbd map lv0 -p blk_data' により 再マップして 'mount /dev/rbd0 /mnt/blk' する。
+
+
+#### RBDのリスト表示
+
+次のプール上のRBDをリストできる。
+
+~~~
+# rbd ls blk_data
+lv0
+
+# rbd create lv1 --size 1024 --image-feature layering -p blk_data
+# rbd ls blk_data
+lv0
+lv1
+~~~
+
+
+#### RBDの情報表示
+
+`rbd info`は ブロックデバイスのサイズ、スナップショット数、作成日などを表示できる。
+
+~~~
+# rbd info lv1 -p blk_data
+rbd image 'lv1':
+	size 1 GiB in 256 objects
+	order 22 (4 MiB objects)
+	snapshot_count: 0
+	id: 11b7171215c2
+	block_name_prefix: rbd_data.11b7171215c2
+	format: 2
+	features: layering
+	op_features: 
+	flags: 
+	create_timestamp: Sat Jun  6 07:03:37 2020
+	access_timestamp: Sat Jun  6 07:03:37 2020
+	modify_timestamp: Sat Jun  6 07:03:37 2020
+~~~
+
+
+#### RBDの削除
+
+`rbd rm` によってデバイスの削除ができる。
+
+~~~
+# rbd rm lv1 -p blk_data
+Removing image: 100% complete...done.
+
+# rbd ls blk_data
+lv0
+~~~
+
+
+
+#### 参考資料
+
+* Ceph Basic Block Device Commands, https://docs.ceph.com/docs/master/rbd/rados-rbd-cmds/
+* Ceph Kernel Module Operation, https://docs.ceph.com/docs/master/rbd/rbd-ko/
+
+
+
+
+
 
 ## Cephファイルシステムへのアクセス
 
