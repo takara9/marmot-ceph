@@ -20,7 +20,7 @@ vagrant ssh
 
 ## 学習用クライアントのセットアップ
 
-もう一つターミナルを開いて、`vagrant node1` へログインして、Cephのツールをインストールします。 以下のコマンでは、`client`というホストに対して、Cephのバージョン Nautilus をリモートインストールします。そして、次のコマンドで、設定情報をコピーして、Cephクラスタにアクセスできるようにします。
+もう一つターミナルを開いて、`vagrant node1` へログインして、Cephのツールをリモート・インストールします。 以下のコマンでは、`client`というホストに対して、Cephのバージョン Nautilus をリモートインストールします。そして、次のコマンドで、設定情報をコピーして、Cephクラスタにアクセスできるようにします。
 
 ~~~
 $ vagrant ssh node1
@@ -38,7 +38,7 @@ root@node1:~# ceph-deploy admin client
 
 
 
-## Cephブロックストレージの利用
+# Cephブロックストレージの利用
 
 学習クライアントのターミナルから、ブロックデバイス RBD (RADOS Block Device) イメージを作成して、カーネルのデバイス名とマップすることで、ブロックデバイスとしてアクセスできるようになる。そして、ブロックデバイスにファイルシステムを作成してマウントする。
 
@@ -147,36 +147,41 @@ lv0
 
 
 
-## Cephファイルシステムへのアクセス
+# CephFSの利用
 
-こちらもcephfsのためのCephクラスタ側の設定は、AnsibleのPlaybookによって設定済みなので、クライアントだけの設定でマウントができます。
+#### 認証情報の取得
 
-Cephfsにアクセスするためのキーを表示して、クライアント側にファイルを作成します。
+CephFSにアクセスするためにvagrant ホストからnode1を指定してキーを表示して、クライアント側にファイルを作成する。
 
 ~~~
-tkr@luigi:~/vagrant-ceph$ vagrant ssh master -c "sudo cat ceph.client.admin.keyring"
+$ vagrant ssh node1 -c "sudo cat /root/ceph.client.admin.keyring"
 [client.admin]
-	key = AQCR9w9eyY/4EhAAPoVbB412QsC58KxzIv3ABg==
+	key = AQC0DNte1MCaNhAAU2nqHMw5bO+xIULhBgf2wg==
+	caps mds = "allow *"
+	caps mgr = "allow *"
+	caps mon = "allow *"
+	caps osd = "allow *"
 <以下省略>
 ~~~
 
-ファイル名は特に何でも良いのですが、`admin.secret`としておきます。
+
+ファイル名はmountコマンドのオプションとして指定するので、後で分かり易い名前`admin.secret`にしておく。
 
 ~~~
-tkr@luigi:~/vagrant-ceph$ vagrant ssh client
-vagrant@client:~$ sudo -
-root@client:~# vi admin.secret
-root@client:~# cat admin.secret 
+$ vagrant ssh client
+$ sudo -s
+# cat - > admin.secret
 AQCR9w9eyY/4EhAAPoVbB412QsC58KxzIv3ABg==
+ctrl-D
 ~~~
 
-次は、鍵ファイルを指定してマウントすることができます。node1は予め/etc/hostsに登録してあるので、他に設定は必要ありません。
+マウントポイントを作成して、マウントする。
 
 ~~~
-root@client:~# mkdir /mnt/fs
-root@client:~# mount -t ceph node1:6789:/ /mnt/fs -o name=admin,secretfile=admin.secret
+# mkdir /mnt/fs
+# mount -t ceph node1:6789:/ /mnt/fs -o name=admin,secretfile=admin.secret
 
-root@client:~# df -h
+# df -h
 Filesystem          Size  Used Avail Use% Mounted on
 <中略>
 /dev/rbd0           3.9G   16M  3.9G   1% /mnt/blk
@@ -184,15 +189,53 @@ Filesystem          Size  Used Avail Use% Mounted on
 ~~~
 
 
-## Amazon S3互換API、OpenStack Swift互換API のオブジェクトストレージアクセス
+アンマウントは 'umount' コマンドを利用する。
 
-こちらも`vagrant up`で、Cephクラスタの設定が完了しているので、アクセス用のユーザーを作成して、アクセスするだけです。
 
-管理用ノードにログインして、以下のコマンドでユーザーを作成して、キーを生成します。
+参考資料
+* Ceph Mount CephFS using Kernel Driver, https://docs.ceph.com/docs/master/cephfs/mount-using-kernel-driver/
+
+
+
+
+
+# オブジェクトストレージ
+
+Ceph オブジェクト・ゲートウェイは Amazon S3 互換API、OpenStack Swift互換APIを提供する。
+
+
+#### アクセスキーの生成
+
+クライアントからのアクセスのまに、node1にログインしてアクセスキーを生成する。このコマンドではS3互換のアクセスキーとシークレットキーが生成される。
 
 ~~~
-root@master:~# radosgw-admin user create --uid="testuser" --display-name="First User"
-root@master:~# radosgw-admin subuser create --uid=testuser --subuser=testuser:swift --access=full
+$ vagrant ssh node1
+$ sudo -s
+root@node1:~# radosgw-admin user create --uid="testuser" --display-name="First User"
+{
+    "user_id": "testuser",
+    "display_name": "First User",
+    "email": "",
+    "suspended": 0,
+    "max_buckets": 1000,
+    "subusers": [],
+    "keys": [
+        {
+            "user": "testuser",
+            "access_key": "33SHVNZYIEU393LR69S4",
+            "secret_key": "9IrU9HvLVGYrd22MO5K8cLS4Vs24IjuLM6p5HttZ"
+        }
+    ],
+    "swift_keys": [],
+    <以下省略>
+}
+~~~
+
+次のコマンドではSWIFT互換のキーを生成できる
+
+
+~~~
+root@node1:~# radosgw-admin subuser create --uid=testuser --subuser=testuser:swift --access=full
 {
     "user_id": "testuser",
     "display_name": "First User",
@@ -205,62 +248,47 @@ root@master:~# radosgw-admin subuser create --uid=testuser --subuser=testuser:sw
             "permissions": "full-control"
         }
     ],
-    "keys": [　　<-- S3互換
+    "keys": [
         {
             "user": "testuser",
-            "access_key": "APHPYEEV1BFOCXOFYV95",
-            "secret_key": "1G2cDndryMZlkhNJDKra7R9CXEsJtPWjE5L6QMmW"
+            "access_key": "33SHVNZYIEU393LR69S4",
+            "secret_key": "9IrU9HvLVGYrd22MO5K8cLS4Vs24IjuLM6p5HttZ"
         }
     ],
     "swift_keys": [
         {
             "user": "testuser:swift",
-            "secret_key": "hVkJtBBTxxBNUImI4CXAZ1xTvCz59gWfWV96TPPH"
+            "secret_key": "FQLP4X6nK46a08BReIrQOTsjZ7LuQAITfYdLH5Wj"
         }
     ],
-＜以下省略＞
+    <以下省略>    
+}
 ~~~
 
-### S3 APIでのアクセス
 
-S3 APIのアクセスは、Pythonから実行します。そのためのモジュールをインストールしておきます。
 
-~~~
-root@client:~# apt-get install python-boto
-~~~
 
-Pythonの後述のコードをコピペで作成しておき、実行して、バケットが作成されたことで確認します。
+#### AWS S3 APIアクセス
+
+
+ディレクトリclientの下、sample-codeにAWS S3にアクセスするためのサンプルコードを置いておく。
 
 ~~~
-root@client:~# vi s3test.py
-root@client:~# python s3test.py 
-my-new-bucket 2020-01-04T22:39:22.195Z
+client/
+├── README.md
+├── Vagrantfile
+├── playbooks
+│   ├── hosts
+│   └── install_node.yaml
+└── sample-code
+    ├── boto-create-bucket.py
+    ├── boto3-create-bucket.py
+    └── credentials.json
 ~~~
 
-以下がS3アクセス用のコードです。IPアドレスは、node1のIPアドレスで、２つのキーを前述のユーザー生成時の応答からコピペして利用すます。
 
-~~~
-root@client:~# cat s3test.py 
-import boto.s3.connection
 
-access_key = 'APHPYEEV1BFOCXOFYV95'
-secret_key = '1G2cDndryMZlkhNJDKra7R9CXEsJtPWjE5L6QMmW'
-conn = boto.connect_s3(
-        aws_access_key_id=access_key,
-        aws_secret_access_key=secret_key,
-        host='172.20.1.31', port=7480,
-        is_secure=False, calling_format=boto.s3.connection.OrdinaryCallingFormat(),
-       )
-
-bucket = conn.create_bucket('my-new-bucket')
-for bucket in conn.get_all_buckets():
-    print "{name} {created}".format(
-        name=bucket.name,
-        created=bucket.creation_date,
-    )
-~~~
-
-## Swift API でのアクセス
+## OpenStack Swift API アクセス
 
 先ほど作成したバケットをSwiftオブジェクトストレージから見えることを確認します。
 
