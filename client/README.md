@@ -42,6 +42,8 @@ root@node1:~# ceph-deploy admin client
 
 学習クライアントのターミナルから、ブロックデバイス RBD (RADOS Block Device) イメージを作成して、カーネルのデバイス名とマップすることで、ブロックデバイスとしてアクセスできるようになる。そして、ブロックデバイスにファイルシステムを作成してマウントする。
 
+#### RBDの作成
+
 次のコマンドで、プール blk_data 上に イメージフィーチャーlayering、サイズ 4096 MB で、lv0 を作成する。
 
 ~~~
@@ -50,12 +52,18 @@ client:~ $ sudo -s
 client:~# rbd create lv0 --size 4096 --image-feature layering -p blk_data
 ~~~
 
+
+#### カーネルデバイスとのマッピング
+
 Ceph上のブロックデバイスをカーネルのブロックデバイスとマッピング（対応づけ）る。
 
 ~~~
 client:~# rbd map lv0 -p blk_data
 /dev/rbd0
 ~~~
+
+
+#### ファイルシステムのマウント
 
 ファイルシステムでフォーマットする。 
 
