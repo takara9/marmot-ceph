@@ -170,7 +170,7 @@
         chdir: /root
 
     - name: create pool for object storage
-      command: ceph osd pool create obj_data 10
+      command: ceph osd pool create obj_data 16
       args:
         chdir: /root
 
@@ -181,7 +181,7 @@
 
     ## ブロックストレージのプール作成
     - name: create pool for block storage
-      command: ceph osd pool create blk_data 10
+      command: ceph osd pool create blk_data 16
       args:
         chdir: /root
 
@@ -192,12 +192,12 @@
 
     ## ファイルストレージの設定
     - name: create pool for file storage
-      command: ceph osd pool create cephfs_data 10
+      command: ceph osd pool create cephfs_data 16
       args:
         chdir: /root
 
     - name: create pool fs metadata
-      command: ceph osd pool create cephfs_metadata 1
+      command: ceph osd pool create cephfs_metadata 4
       args:
         chdir: /root
 
