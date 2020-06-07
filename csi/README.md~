@@ -1,0 +1,30 @@
+# CSIでKubernetesと連携する方法
+
+
+
+~~~
+ceph auth get-or-create client.kubernetes mon 'profile rbd' osd 'profile rbd pool=blk_data' mgr 'profile rbd'
+~~~
+
+
+
+
+~~~
+root@node1:~# ceph auth get-or-create client.kubernetes mon 'profile rbd' osd 'profile rbd pool=blk_data' mgr 'profile rbd'
+[client.kubernetes]
+	key = AQCNFtxeyHKhHBAAL6vZFQGF+JwofOadt2b3XA==
+~~~
+
+
+~~~
+root@node1:~# ceph mon dump
+dumped monmap epoch 1
+epoch 1
+fsid 3ac56641-b273-42ab-afcf-218a34ad1924
+last_changed 2020-06-06 03:25:22.430426
+created 2020-06-06 03:25:22.430426
+min_mon_release 14 (nautilus)
+0: [v2:172.20.1.31:3300/0,v1:172.20.1.31:6789/0] mon.node1
+1: [v2:172.20.1.32:3300/0,v1:172.20.1.32:6789/0] mon.node2
+2: [v2:172.20.1.33:3300/0,v1:172.20.1.33:6789/0] mon.node3
+~~~
