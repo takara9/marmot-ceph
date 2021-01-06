@@ -1,0 +1,71 @@
+#
+# 最小構成のJenkins
+#
+domain: labs.local
+
+## Hypervisor type
+##  kvm : QEMU+KVM + virsh
+hypervisor: kvm
+
+
+## Cluster Network
+private_ip_subnet: 172.16.1.0/16
+public_ip_subnet:  10.0.0.0/8
+
+### Network device and config
+net_dev_default: enp1s0
+net_dev_private: enp2s0
+net_dev_public:  enp3s0
+
+public_ip_gw: 10.0.0.1
+public_ip_dns: 192.168.1.241
+
+
+### Master, Worker, Internal/Frontend Loadbalancer and bootnode
+vm_spec:
+  - name: "master"
+    cpu: 2
+    memory: 2048
+    private_ip: "172.16.1.30"
+    public_ip: "10.0.1.30"
+    vm_host: nagato    
+    comment: "Ceph Management node #1"
+
+  - name: "node1"
+    cpu: 2
+    memory: 2048
+    private_ip: "172.16.1.31"
+    public_ip: "10.0.1.31"
+    storage:
+    - 100
+    vm_host: nagato    
+    comment:  "Ceph storage node #1"
+
+  - name: "node2"
+    cpu: 2
+    memory: 2048
+    private_ip: "172.16.1.32"
+    public_ip: "10.0.1.32"
+    storage:
+    - 100
+    vm_host: nagato    
+    comment:  "Ceph storage node #2"
+
+  - name: "node3"
+    cpu: 2
+    memory: 2048
+    private_ip: "172.16.1.33"
+    public_ip: "10.0.1.33"
+    storage:
+    - 100
+    vm_host: nagato    
+    comment:  "Ceph storage node #3"
+
+  - name: "client"
+    cpu: 2
+    memory: 2048
+    private_ip: "172.16.1.40"
+    public_ip: "10.0.1.40"
+    vm_host: nagato    
+    comment:  "Ceph client node"
+

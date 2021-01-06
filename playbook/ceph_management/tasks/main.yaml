@@ -1,0 +1,237 @@
+- name: Install the prerequisite packeage
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - software-properties-common
+    - ntp
+    - python-apt
+
+- name: cp hosts for remote host
+  template:
+    src:  hosts
+    dest: /etc/hosts
+    mode: '0644'
+    owner: root
+    group: root
+
+- name: cp ssh config
+  template:
+    src:  config
+    dest: /root/.ssh/config
+    mode: '0400'
+    owner: root
+    group: root
+
+
+#
+# ceph-deploy のインストール
+# 
+- name: Add Ceph GPG key
+  apt_key: url=https://download.ceph.com/keys/release.asc
+
+- name: Add Ceph APT repository
+  apt_repository:
+     repo: deb https://download.ceph.com/debian-nautilus/ {{ansible_distribution_release}} main
+
+- name: Install the prerequisite packeage
+  apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+    - ceph-deploy
+    - ceph-mgr-dashboard
+
+
+- local_action: file path="{{ log_dir }}" state=directory owner=root group=root mode=0755
+#
+# Cephのセットアップ
+#
+- name: 01-ceph-deploy new
+  command: ceph-deploy new master node1 node2 node3
+  register: ceph_deploy_01
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_deploy_01 }}" dest="{{ log_dir }}/01-ceph-deploy.log"
+
+- wait_for:
+    timeout: 100
+
+- name: 02-ceph-deploy install
+  command: ceph-deploy install --release nautilus master node1 node2 node3
+  register: ceph_deploy_02
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_deploy_02 }}" dest="{{ log_dir }}/02-ceph-deploy.log"
+
+- name: 03-ceph-deploy mon create
+  command: ceph-deploy mon create node1 node2 node3
+  register: ceph_deploy_03
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_deploy_03 }}" dest="{{ log_dir }}/03-ceph-deploy.log"
+
+- name: 04-ceph-deploy mon create-initial 
+  command: ceph-deploy mon create-initial
+  register: ceph_deploy_04
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_deploy_04 }}" dest="{{ log_dir }}/04-ceph-deploy.log"
+
+- name: 05-ceph-deploy gatherkeys 
+  command: ceph-deploy gatherkeys node1 node2 node3
+  register: ceph_deploy_05
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_deploy_05 }}" dest="{{ log_dir }}/05-ceph-deploy.log"
+
+
+## ストレージのセットアップ
+#- name: 06-ceph-deploy osd create
+#  command: ceph-deploy osd create --data {{ device_name }} node1
+#  args:
+#    chdir: "{{ cadmin_home }}"
+#- name: setup storage node2
+#  command: ceph-deploy osd create --data {{ device_name }} node2
+#  args:
+#    chdir: "{{ cadmin_home }}"
+#- name: setup storage node3
+#  command: ceph-deploy osd create --data  {{ device_name }} node3
+#  args:
+#    chdir: "{{ cadmin_home }}"
+
+
+- name: 06-ceph-deploy osd create
+  command: ceph-deploy osd create --data {{ device_name }} {{ item }}
+  register: "ceph_deploy_{{ item }}_06"
+  with_items: "{{ nodes }}"
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="ceph_deploy_{{ item }}_06" dest="{{ log_dir }}/06-ceph-deploy-{{ item }}.log"
+  with_items: "{{ nodes }}"
+
+
+#######
+
+## 設定情報の配布
+- name: 07-ceph-deploy admin 
+  command: ceph-deploy admin master node1 node2 node3
+  register: ceph_deploy_07
+  with_items: nodes
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_deploy_07 }}" dest="{{ log_dir }}/07-ceph-deploy.log"
+
+
+## マネージャーデーモン と メタデータサーバーの生成
+- name: 08-ceph-deploy
+  command: ceph-deploy mgr create master
+  register: ceph_deploy_08
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_deploy_08 }}" dest="{{ log_dir }}/08-ceph-deploy.log"
+
+- name: 09-ceph-deploy 
+  command: ceph-deploy mds create node1
+  register: ceph_deploy_09
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_deploy_09 }}" dest="{{ log_dir }}/09-ceph-deploy.log"
+
+
+
+## オブジェクトゲートウェイの生成
+- name: 10-ceph-deploy rgw 
+  command: ceph-deploy rgw create node1
+  register: ceph_deploy_10
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_deploy_10 }}" dest="{{ log_dir }}/10-ceph-deploy.log"
+
+
+- name: 11-ceph create pool for object storage
+  command: ceph osd pool create obj_data 10
+  register: ceph_11
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_11 }}" dest="{{ log_dir }}/11-ceph.log"
+
+- name: 12-ceph osd map 
+  command: ceph osd map obj_data obj01
+  register: ceph_12
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_12 }}" dest="{{ log_dir }}/12-ceph.log"
+
+
+## ブロックストレージのプール作成
+- name: 13-ceph create pool for block storage
+  command: ceph osd pool create blk_data 10
+  register: ceph_13
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_13 }}" dest="{{ log_dir }}/13-ceph.log"
+
+- name: 14-ceph ceph osd crush 
+  command: ceph osd crush tunables hammer
+  register: ceph_14
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_14 }}" dest="{{ log_dir }}/14-ceph.log"
+
+
+## ファイルストレージの設定
+- name: 15-cpeh create pool for file storage
+  command: ceph osd pool create cephfs_data 10
+  register: ceph_15
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_15 }}" dest="{{ log_dir }}/15-ceph.log"
+
+
+- name: 16-ceph create pool fs metadata
+  command: ceph osd pool create cephfs_metadata 1
+  register: ceph_16
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_16 }}" dest="{{ log_dir }}/16-ceph.log"
+
+
+- name: 17-ceph fs new cephfs 
+  command: ceph fs new cephfs cephfs_metadata cephfs_data
+  register: ceph_17
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_17 }}" dest="{{ log_dir }}/17-ceph.log"
+
+
+## ダッシュボードの設定
+- name: 18-ceph mgr module enable dashboard
+  command: ceph mgr module enable dashboard
+  register: ceph_18
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_18 }}" dest="{{ log_dir }}/18-ceph.log"
+
+
+- name: 19-ceph Create self-signed certificate
+  command: ceph dashboard create-self-signed-cert
+  register: ceph_19
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_19 }}" dest="{{ log_dir }}/19-ceph.log"
+
+
+- name: 20-ceph Set user/password & role
+  command: ceph dashboard ac-user-create admin password administrator
+  register: ceph_20
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_20 }}" dest="{{ log_dir }}/20-ceph.log"

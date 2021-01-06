@@ -1,0 +1,17 @@
+- name: Install ceph management node
+  connection: local
+  become: yes
+  hosts:
+    - master
+  roles:
+    - ceph_management
+
+
+- name: Install ceph storagenode
+  become: yes
+  hosts: all
+  roles:
+    - ceph_storagenode
+
+
+
