@@ -107,15 +107,15 @@
 #  args:
 #    chdir: "{{ cadmin_home }}"
 
+#register: "ceph_deploy_{{ item }}_06"
 
 - name: 06-ceph-deploy osd create
   command: ceph-deploy osd create --data {{ device_name }} {{ item }}
-  register: "ceph_deploy_{{ item }}_06"
+  register: "ceph_deploy_06"
   with_items: "{{ nodes }}"
   args:
     chdir: "{{ cadmin_home }}"
-- local_action: copy content="ceph_deploy_{{ item }}_06" dest="{{ log_dir }}/06-ceph-deploy-{{ item }}.log"
-  with_items: "{{ nodes }}"
+- local_action: copy content="ceph_deploy_06" dest="{{ log_dir }}/06-ceph-deploy.log"
 
 
 #######

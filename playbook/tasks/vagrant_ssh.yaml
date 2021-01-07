@@ -1,0 +1,44 @@
+- name: Check golang tar
+  stat:
+    path: /vagrant/playbook/templates/id_rsa
+  register: id_rsa
+
+- name: generate ssh key
+  shell: |
+    ssh-keygen -t rsa -N '' -f id_rsa
+  args:
+    chdir: /vagrant/playbook/templates
+  when: id_rsa.stat.exists == False
+
+- name: cp id_rsa root for ssh remote command
+  template:
+    src:  id_rsa
+    dest: /root/.ssh/id_rsa
+    mode: '0600'
+    owner: root
+    group: root
+
+- name: cp ssh-key vagrant for remote op
+  template:
+    src:  id_rsa.pub
+    dest: /root/.ssh/authorized_keys
+    mode: '0600'
+    owner: root
+    group: root
+
+- name: cp config to avoid check host at first login
+  template:
+    src:  config
+    dest: /root/.ssh/config
+    mode: '0600'
+    owner: root
+    group: root
+
+- name: cp id_rsa vagrant for remote op
+  template:
+    src:  id_rsa
+    dest: /home/vagrant/.ssh/id_rsa
+    mode: '0600'
+    owner: vagrant
+    group: vagrant
+
