@@ -20,17 +20,10 @@ net_dev_public:  enp3s0
 public_ip_gw: 10.0.0.1
 public_ip_dns: 192.168.1.241
 
+cluster_name: ceph
 
 ### Master, Worker, Internal/Frontend Loadbalancer and bootnode
 vm_spec:
-  - name: "master"
-    cpu: 2
-    memory: 2048
-    private_ip: "172.16.1.30"
-    public_ip: "10.0.1.30"
-    vm_host: nagato    
-    comment: "Ceph Management node #1"
-
   - name: "node1"
     cpu: 2
     memory: 2048
@@ -68,4 +61,14 @@ vm_spec:
     public_ip: "10.0.1.40"
     vm_host: nagato    
     comment:  "Ceph client node"
+
+  - name: "master"
+    cpu: 2
+    memory: 2048
+    private_ip: "172.16.1.30"
+    public_ip: "10.0.1.30"
+    vm_host: nagato
+    playbook: install.yaml
+    comment: "Ceph Management node #1"
+
 
