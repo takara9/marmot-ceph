@@ -31,7 +31,7 @@ vm_spec:
     public_ip: "10.0.1.31"
     storage:
     - 100
-    vm_host: nagato    
+    vm_host: auto
     comment:  "Ceph storage node #1"
 
   - name: "node2"
@@ -41,7 +41,7 @@ vm_spec:
     public_ip: "10.0.1.32"
     storage:
     - 100
-    vm_host: nagato    
+    vm_host: auto
     comment:  "Ceph storage node #2"
 
   - name: "node3"
@@ -51,7 +51,7 @@ vm_spec:
     public_ip: "10.0.1.33"
     storage:
     - 100
-    vm_host: nagato    
+    vm_host: auto
     comment:  "Ceph storage node #3"
 
   - name: "client"
@@ -59,7 +59,7 @@ vm_spec:
     memory: 2048
     private_ip: "172.16.1.40"
     public_ip: "10.0.1.40"
-    vm_host: nagato    
+    vm_host: auto
     comment:  "Ceph client node"
 
   - name: "master"
@@ -67,7 +67,7 @@ vm_spec:
     memory: 2048
     private_ip: "172.16.1.30"
     public_ip: "10.0.1.30"
-    vm_host: nagato
+    vm_host: auto
     playbook: install.yaml
     comment: "Ceph Management node #1"
 
