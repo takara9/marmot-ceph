@@ -1,9 +1,11 @@
-# Vagrantノード上にCephクラスタを構築するAnsible
-
+# Marmot Ceph VM上にCephクラスタを構築するAnsibleプレイブック
 
 ## 概要
 
-これはパソコンのVagrant上で以下のノードを起動してCephクラスタの仕組みを理解する為のコードです。
+これはLinuxの QEMU/KVM または Vagrant でCephクラスタを構成するAnsibleコードです。
+
+
+以下はVagrantで起動した時のノード構成です。
 
 ~~~
 1. master   172.20.1.30  192.168.1.90  管理ノード
@@ -14,7 +16,7 @@
 ~~~
 
 
-## このクラスタを起動するために必要なソフトウェア
+## Vagrantで起動するために必要なソフトウェア
 
 このコードを利用するためには、次のソフトウェアを必要とします。
 
@@ -237,6 +239,26 @@ swiftコマンドに、キーをユーザーと鍵文字列を設定して、バ
 root@client:~# swift -V 1 -A http://172.20.1.31:7480/auth -U testuser:swift -K 'hVkJtBBTxxBNUImI4CXAZ1xTvCz59gWfWV96TPPH' list
 my-new-bucket
 ~~~
+
+
+
+## KVM/QEMUで起動する場合
+
+起動コマンド
+
+~~~
+$ vm-create -f Qemukvm.yaml
+~~~
+
+
+削除コマンド
+
+~~~
+$ vm-destroy -f Qemukvm.yaml
+~~~
+
+
+
 
 
 ## 参考URL
