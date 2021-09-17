@@ -9,8 +9,8 @@ ff02::2	ip6-allrouters
 ff02::3	ip6-allhosts
 
 # Cepf nodes
-172.16.1.30  master master
-172.16.1.31  node1
-172.16.1.32  node2
-172.16.1.33  node3
-172.16.1.40  client
+172.16.35.30  master master
+172.16.35.31  node1
+172.16.35.32  node2
+172.16.35.33  node3
+172.16.35.40  client
