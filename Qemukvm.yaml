@@ -7,28 +7,29 @@ domain: labs.local
 ##  kvm : QEMU+KVM + virsh
 hypervisor: kvm
 
-
 ## Cluster Network
 private_ip_subnet: 172.16.1.0/16
-public_ip_subnet:  10.0.0.0/8
+public_ip_subnet:  192.168.1.0/24
 
 ### Network device and config
 net_dev_default: enp1s0
 net_dev_private: enp2s0
 net_dev_public:  enp3s0
 
-public_ip_gw: 10.0.0.1
-public_ip_dns: 192.168.1.241
+public_ip_gw:  192.168.1.1
+public_ip_dns: 192.168.1.8
 
 cluster_name: ceph
+qcow2_image: ubuntu18.04.qcow2
+os_variant:  ubuntu18.04
 
-### Master, Worker, Internal/Frontend Loadbalancer and bootnode
+
+### Master, Storage Node, Test Client
 vm_spec:
   - name: "node1"
     cpu: 2
     memory: 2048
-    private_ip: "172.16.1.31"
-    public_ip: "10.0.1.31"
+    private_ip: "172.16.35.31"
     storage:
     - 100
     comment:  "Ceph storage node #1"
@@ -36,8 +37,7 @@ vm_spec:
   - name: "node2"
     cpu: 2
     memory: 2048
-    private_ip: "172.16.1.32"
-    public_ip: "10.0.1.32"
+    private_ip: "172.16.35.32"
     storage:
     - 100
     comment:  "Ceph storage node #2"
@@ -45,24 +45,30 @@ vm_spec:
   - name: "node3"
     cpu: 2
     memory: 2048
-    private_ip: "172.16.1.33"
-    public_ip: "10.0.1.33"
+    private_ip: "172.16.35.33"
     storage:
     - 100
     comment:  "Ceph storage node #3"
 
+  - name: "node4"
+    cpu: 2
+    memory: 2048
+    private_ip: "172.16.35.34"
+    storage:
+    - 100
+    comment:  "Ceph storage node #4"
+
   - name: "client"
     cpu: 2
     memory: 2048
-    private_ip: "172.16.1.40"
-    public_ip: "10.0.1.40"
+    private_ip: "172.16.35.40"
     comment:  "Ceph client node"
 
   - name: "master"
     cpu: 2
     memory: 2048
-    private_ip: "172.16.1.30"
-    public_ip: "10.0.1.30"
+    private_ip: "172.16.35.30"
+    public_ip: "192.168.1.30"
     playbook: install.yaml
     comment: "Ceph Management node #1"
 

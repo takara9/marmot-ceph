@@ -6,6 +6,7 @@
   - include_tasks: tasks/vagrant_ssh.yaml
     when: ansible_facts.virtualization_type == "virtualbox"
 
+
 - name: Install ceph management node
   connection: local
   become: yes

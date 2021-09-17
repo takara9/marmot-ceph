@@ -55,7 +55,7 @@
 # Cephのセットアップ
 #
 - name: 01-ceph-deploy new
-  command: ceph-deploy new master node1 node2 node3
+  command: ceph-deploy new master node1 node2 node3 node4
   register: ceph_deploy_01
   args:
     chdir: "{{ cadmin_home }}"
@@ -65,14 +65,14 @@
     timeout: 100
 
 - name: 02-ceph-deploy install
-  command: ceph-deploy install --release nautilus master node1 node2 node3
+  command: ceph-deploy install --release nautilus master node1 node2 node3 node4
   register: ceph_deploy_02
   args:
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_deploy_02 }}" dest="{{ log_dir }}/02-ceph-deploy.log"
 
 - name: 03-ceph-deploy mon create
-  command: ceph-deploy mon create node1 node2 node3
+  command: ceph-deploy mon create node1 node2 node3 node4
   register: ceph_deploy_03
   args:
     chdir: "{{ cadmin_home }}"
@@ -86,7 +86,7 @@
 - local_action: copy content="{{ ceph_deploy_04 }}" dest="{{ log_dir }}/04-ceph-deploy.log"
 
 - name: 05-ceph-deploy gatherkeys 
-  command: ceph-deploy gatherkeys node1 node2 node3
+  command: ceph-deploy gatherkeys node1 node2 node3 node4
   register: ceph_deploy_05
   args:
     chdir: "{{ cadmin_home }}"
@@ -106,8 +106,8 @@
 #  command: ceph-deploy osd create --data  {{ device_name }} node3
 #  args:
 #    chdir: "{{ cadmin_home }}"
-
 #register: "ceph_deploy_{{ item }}_06"
+
 
 - name: 06-ceph-deploy osd create
   command: ceph-deploy osd create --data {{ device_name }} {{ item }}
@@ -122,7 +122,7 @@
 
 ## 設定情報の配布
 - name: 07-ceph-deploy admin 
-  command: ceph-deploy admin master node1 node2 node3
+  command: ceph-deploy admin master node1 node2 node3 node4
   register: ceph_deploy_07
   with_items: nodes
   args:
@@ -228,9 +228,16 @@
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_19 }}" dest="{{ log_dir }}/19-ceph.log"
 
+- name: 20-ceph put password file
+  template:
+    src:  ceph-rds-password
+    dest: /root/ceph-rds-password
+    mode: '0644'
+    owner: root
+    group: root
 
-- name: 20-ceph Set user/password & role
-  command: ceph dashboard ac-user-create admin password administrator
+- name: 21-ceph Set user/password & role
+  command: ceph dashboard ac-user-create admin -i /root/ceph-rds-password administrator
   register: ceph_20
   args:
     chdir: "{{ cadmin_home }}"
