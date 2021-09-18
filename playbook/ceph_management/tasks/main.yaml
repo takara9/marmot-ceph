@@ -12,13 +12,13 @@
     - ntp
     - python-apt
 
-- name: cp hosts for remote host
-  template:
-    src:  hosts
-    dest: /etc/hosts
-    mode: '0644'
-    owner: root
-    group: root
+#- name: cp hosts for remote host
+#  template:
+#    src:  hosts
+#    dest: /etc/hosts
+#    mode: '0644'
+#    owner: root
+#    group: root
 
 - name: cp ssh config
   template:
@@ -35,9 +35,13 @@
 - name: Add Ceph GPG key
   apt_key: url=https://download.ceph.com/keys/release.asc
 
+#- name: Add Ceph APT repository
+#  apt_repository:
+#     repo: deb https://download.ceph.com/debian-nautilus/ {{ansible_distribution_release}} main
+
 - name: Add Ceph APT repository
   apt_repository:
-     repo: deb https://download.ceph.com/debian-nautilus/ {{ansible_distribution_release}} main
+     repo: deb https://download.ceph.com/debian-octopus/ {{ansible_distribution_release}} main
 
 - name: Install the prerequisite packeage
   apt:
@@ -64,12 +68,21 @@
 - wait_for:
     timeout: 100
 
+#- name: 02-ceph-deploy install
+#  command: ceph-deploy install --release nautilus master node1 node2 node3 node4
+#  register: ceph_deploy_02
+#  args:
+#    chdir: "{{ cadmin_home }}"
+#- local_action: copy content="{{ ceph_deploy_02 }}" dest="{{ log_dir }}/02-ceph-deploy.log"
+
 - name: 02-ceph-deploy install
-  command: ceph-deploy install --release nautilus master node1 node2 node3 node4
+  command: ceph-deploy install --release octopus master node1 node2 node3 node4
   register: ceph_deploy_02
   args:
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_deploy_02 }}" dest="{{ log_dir }}/02-ceph-deploy.log"
+
+
 
 - name: 03-ceph-deploy mon create
   command: ceph-deploy mon create node1 node2 node3 node4
@@ -157,7 +170,7 @@
 
 
 - name: 11-ceph create pool for object storage
-  command: ceph osd pool create obj_data 10
+  command: ceph osd pool create obj_data 16
   register: ceph_11
   args:
     chdir: "{{ cadmin_home }}"
@@ -173,11 +186,20 @@
 
 ## ブロックストレージのプール作成
 - name: 13-ceph create pool for block storage
-  command: ceph osd pool create blk_data 10
+  command: ceph osd pool create blk_data 16
   register: ceph_13
   args:
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_13 }}" dest="{{ log_dir }}/13-ceph.log"
+
+
+- name: 13.5-ceph create pool for block storage
+  command: ceph osd pool application enable blk_data rbd
+  register: ceph_13_5
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_13_5 }}" dest="{{ log_dir }}/13.5-ceph.log"
+
 
 - name: 14-ceph ceph osd crush 
   command: ceph osd crush tunables hammer
@@ -189,7 +211,7 @@
 
 ## ファイルストレージの設定
 - name: 15-cpeh create pool for file storage
-  command: ceph osd pool create cephfs_data 10
+  command: ceph osd pool create cephfs_data 16
   register: ceph_15
   args:
     chdir: "{{ cadmin_home }}"
@@ -197,7 +219,7 @@
 
 
 - name: 16-ceph create pool fs metadata
-  command: ceph osd pool create cephfs_metadata 1
+  command: ceph osd pool create cephfs_metadata 4
   register: ceph_16
   args:
     chdir: "{{ cadmin_home }}"

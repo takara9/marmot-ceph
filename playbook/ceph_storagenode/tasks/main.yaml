@@ -12,10 +12,10 @@
      - ntp
      - python-apt
 
-- name: cp hosts 
-  template:
-    src:  hosts
-    dest: /etc/hosts
-    mode: '0644'
-    owner: root
-    group: root
+#- name: cp hosts 
+#  template:
+#    src:  hosts
+#    dest: /etc/hosts
+#    mode: '0644'
+#    owner: root
+#    group: root

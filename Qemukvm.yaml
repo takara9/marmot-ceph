@@ -1,5 +1,5 @@
 #
-# 最小構成のJenkins
+# Cephクラスタの構成
 #
 domain: labs.local
 
@@ -8,7 +8,7 @@ domain: labs.local
 hypervisor: kvm
 
 ## Cluster Network
-private_ip_subnet: 172.16.1.0/16
+private_ip_subnet: 172.16.0.0/16
 public_ip_subnet:  192.168.1.0/24
 
 ### Network device and config
@@ -27,48 +27,53 @@ os_variant:  ubuntu18.04
 ### Master, Storage Node, Test Client
 vm_spec:
   - name: "node1"
-    cpu: 2
-    memory: 2048
-    private_ip: "172.16.35.31"
+    cpu: 1
+    memory: 4096
+    private_ip: "172.16.0.31"
     storage:
     - 100
+    playbook: setup_node.yaml
     comment:  "Ceph storage node #1"
 
   - name: "node2"
-    cpu: 2
-    memory: 2048
-    private_ip: "172.16.35.32"
+    cpu: 1
+    memory: 4096
+    private_ip: "172.16.0.32"
     storage:
     - 100
+    playbook: setup_node.yaml
     comment:  "Ceph storage node #2"
 
   - name: "node3"
-    cpu: 2
-    memory: 2048
-    private_ip: "172.16.35.33"
+    cpu: 1
+    memory: 4096
+    private_ip: "172.16.0.33"
     storage:
     - 100
+    playbook: setup_node.yaml
     comment:  "Ceph storage node #3"
 
   - name: "node4"
-    cpu: 2
-    memory: 2048
-    private_ip: "172.16.35.34"
+    cpu: 1
+    memory: 4096
+    private_ip: "172.16.0.34"
     storage:
     - 100
+    playbook: setup_node.yaml
     comment:  "Ceph storage node #4"
 
   - name: "client"
-    cpu: 2
+    cpu: 1
     memory: 2048
-    private_ip: "172.16.35.40"
+    private_ip: "172.16.0.40"
+    playbook: setup_node.yaml
     comment:  "Ceph client node"
 
   - name: "master"
-    cpu: 2
-    memory: 2048
-    private_ip: "172.16.35.30"
-    public_ip: "192.168.1.30"
+    cpu: 1
+    memory: 4096
+    private_ip: "172.16.0.30"
+    public_ip: "192.168.1.6"
     playbook: install.yaml
     comment: "Ceph Management node #1"
 

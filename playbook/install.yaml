@@ -6,6 +6,18 @@
   - include_tasks: tasks/vagrant_ssh.yaml
     when: ansible_facts.virtualization_type == "virtualbox"
 
+- name: Install hosts file etc
+  become: yes
+  hosts: all
+  gather_facts: yes  
+  tasks:
+  - name: cp hosts for remote host
+    template:
+      src:  hosts
+      dest: /etc/hosts
+      mode: '0644'
+      owner: root
+      group: root
 
 - name: Install ceph management node
   connection: local
