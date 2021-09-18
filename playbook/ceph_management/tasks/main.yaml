@@ -1,96 +1,88 @@
-- name: Install the prerequisite packeage
-  apt:
-    name: "{{ packages }}"
-    state: present
-    update_cache: yes
-  vars:
-    packages:
-    - apt-transport-https
-    - ca-certificates
-    - curl
-    - software-properties-common
-    - ntp
-    - python-apt
+#- name: Install the prerequisite packeage
+#  apt:
+#    name: "{{ packages }}"
+#    state: present
+#    update_cache: yes
+#  vars:
+#    packages:
+#    - apt-transport-https
+#    - ca-certificates
+#    - curl
+#    - software-properties-common
+#    - ntp
+#    - python-apt
 
-#- name: cp hosts for remote host
+#- name: cp ssh config
 #  template:
-#    src:  hosts
-#    dest: /etc/hosts
-#    mode: '0644'
+#    src:  config
+#    dest: /root/.ssh/config
+#    mode: '0400'
 #    owner: root
 #    group: root
-
-- name: cp ssh config
-  template:
-    src:  config
-    dest: /root/.ssh/config
-    mode: '0400'
-    owner: root
-    group: root
 
 
 #
 # ceph-deploy のインストール
 # 
-- name: Add Ceph GPG key
-  apt_key: url=https://download.ceph.com/keys/release.asc
-
+#- name: Add Ceph GPG key
+#  apt_key: url=https://download.ceph.com/keys/release.asc
+#
 #- name: Add Ceph APT repository
 #  apt_repository:
-#     repo: deb https://download.ceph.com/debian-nautilus/ {{ansible_distribution_release}} main
-
-- name: Add Ceph APT repository
-  apt_repository:
-     repo: deb https://download.ceph.com/debian-octopus/ {{ansible_distribution_release}} main
-
-- name: Install the prerequisite packeage
-  apt:
-    name: "{{ packages }}"
-    state: present
-    update_cache: yes
-  vars:
-    packages:
-    - ceph-deploy
-    - ceph-mgr-dashboard
+#     repo: deb https://download.ceph.com/debian-octopus/ {{ansible_distribution_release}} main
+#
+#- name: Install the prerequisite packeage
+#  apt:
+#    name: "{{ packages }}"
+#    state: present
+#    update_cache: yes
+#  vars:
+#    packages:
+#    - ceph-deploy
+#    - ceph-mgr-dashboard
+#- local_action: file path="{{ log_dir }}" state=directory owner=root group=root mode=0755
 
 
-- local_action: file path="{{ log_dir }}" state=directory owner=root group=root mode=0755
+
 #
 # Cephのセットアップ
 #
 - name: 01-ceph-deploy new
-  command: ceph-deploy new master node1 node2 node3 node4
+  command: ceph-deploy new master1 master2 node1 node2 node3 node4
   register: ceph_deploy_01
   args:
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_deploy_01 }}" dest="{{ log_dir }}/01-ceph-deploy.log"
 
+#
+# 完了待ち
+#
 - wait_for:
     timeout: 100
 
-#- name: 02-ceph-deploy install
-#  command: ceph-deploy install --release nautilus master node1 node2 node3 node4
-#  register: ceph_deploy_02
-#  args:
-#    chdir: "{{ cadmin_home }}"
-#- local_action: copy content="{{ ceph_deploy_02 }}" dest="{{ log_dir }}/02-ceph-deploy.log"
-
+#
+# Cephインストール
+#
 - name: 02-ceph-deploy install
-  command: ceph-deploy install --release octopus master node1 node2 node3 node4
+  command: ceph-deploy install --release octopus master1 master2 node1 node2 node3 node4
   register: ceph_deploy_02
   args:
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_deploy_02 }}" dest="{{ log_dir }}/02-ceph-deploy.log"
 
-
-
+#
+# Cephモニターのデプロイ　ノードを指定
+#  こちらは不要じゃないか？
 - name: 03-ceph-deploy mon create
-  command: ceph-deploy mon create node1 node2 node3 node4
+  command: ceph-deploy mon create master1 master2 node1 node2 node3 node4 
   register: ceph_deploy_03
   args:
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_deploy_03 }}" dest="{{ log_dir }}/03-ceph-deploy.log"
 
+#
+# Cephモニターのデプロイ　初期設定
+#
 - name: 04-ceph-deploy mon create-initial 
   command: ceph-deploy mon create-initial
   register: ceph_deploy_04
@@ -98,30 +90,21 @@
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_deploy_04 }}" dest="{{ log_dir }}/04-ceph-deploy.log"
 
+#
+# 
+#
 - name: 05-ceph-deploy gatherkeys 
-  command: ceph-deploy gatherkeys node1 node2 node3 node4
+  command: ceph-deploy gatherkeys master1 master2 node1 node2 node3 node4
   register: ceph_deploy_05
   args:
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_deploy_05 }}" dest="{{ log_dir }}/05-ceph-deploy.log"
 
 
-## ストレージのセットアップ
-#- name: 06-ceph-deploy osd create
-#  command: ceph-deploy osd create --data {{ device_name }} node1
-#  args:
-#    chdir: "{{ cadmin_home }}"
-#- name: setup storage node2
-#  command: ceph-deploy osd create --data {{ device_name }} node2
-#  args:
-#    chdir: "{{ cadmin_home }}"
-#- name: setup storage node3
-#  command: ceph-deploy osd create --data  {{ device_name }} node3
-#  args:
-#    chdir: "{{ cadmin_home }}"
-#register: "ceph_deploy_{{ item }}_06"
 
-
+##
+## ストレージノードのセットアップ
+##
 - name: 06-ceph-deploy osd create
   command: ceph-deploy osd create --data {{ device_name }} {{ item }}
   register: "ceph_deploy_06"
@@ -131,28 +114,32 @@
 - local_action: copy content="ceph_deploy_06" dest="{{ log_dir }}/06-ceph-deploy.log"
 
 
+
 #######
 
+##
 ## 設定情報の配布
+##
 - name: 07-ceph-deploy admin 
-  command: ceph-deploy admin master node1 node2 node3 node4
+  command: ceph-deploy admin master1 master2 node1 node2 node3 node4
   register: ceph_deploy_07
   with_items: nodes
   args:
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_deploy_07 }}" dest="{{ log_dir }}/07-ceph-deploy.log"
 
-
+##
 ## マネージャーデーモン と メタデータサーバーの生成
+##
 - name: 08-ceph-deploy
-  command: ceph-deploy mgr create master
+  command: ceph-deploy mgr create master1 master2
   register: ceph_deploy_08
   args:
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_deploy_08 }}" dest="{{ log_dir }}/08-ceph-deploy.log"
 
 - name: 09-ceph-deploy 
-  command: ceph-deploy mds create node1
+  command: ceph-deploy mds create master1 master2
   register: ceph_deploy_09
   args:
     chdir: "{{ cadmin_home }}"
@@ -160,15 +147,19 @@
 
 
 
+##
 ## オブジェクトゲートウェイの生成
+##
 - name: 10-ceph-deploy rgw 
-  command: ceph-deploy rgw create node1
+  command: ceph-deploy rgw create master1 master2
   register: ceph_deploy_10
   args:
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_deploy_10 }}" dest="{{ log_dir }}/10-ceph-deploy.log"
 
-
+##
+## オブジェクトストレージのプール作成
+##
 - name: 11-ceph create pool for object storage
   command: ceph osd pool create obj_data 16
   register: ceph_11
@@ -176,6 +167,9 @@
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_11 }}" dest="{{ log_dir }}/11-ceph.log"
 
+##
+## プールをマップ
+##
 - name: 12-ceph osd map 
   command: ceph osd map obj_data obj01
   register: ceph_12
@@ -183,8 +177,9 @@
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_12 }}" dest="{{ log_dir }}/12-ceph.log"
 
-
-## ブロックストレージのプール作成
+##
+## ブロック・ストレージのプール作成
+##
 - name: 13-ceph create pool for block storage
   command: ceph osd pool create blk_data 16
   register: ceph_13
@@ -192,7 +187,9 @@
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_13 }}" dest="{{ log_dir }}/13-ceph.log"
 
-
+##
+## ブロック・ストレージのプールのアプリを設定する
+##
 - name: 13.5-ceph create pool for block storage
   command: ceph osd pool application enable blk_data rbd
   register: ceph_13_5
@@ -200,9 +197,11 @@
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_13_5 }}" dest="{{ log_dir }}/13.5-ceph.log"
 
-
+##
+## クラッシュルールの設定
+##
 - name: 14-ceph ceph osd crush 
-  command: ceph osd crush tunables hammer
+  command: ceph osd crush tunables default
   register: ceph_14
   args:
     chdir: "{{ cadmin_home }}"
@@ -260,7 +259,16 @@
 
 - name: 21-ceph Set user/password & role
   command: ceph dashboard ac-user-create admin -i /root/ceph-rds-password administrator
-  register: ceph_20
+  register: ceph_21
   args:
     chdir: "{{ cadmin_home }}"
-- local_action: copy content="{{ ceph_20 }}" dest="{{ log_dir }}/20-ceph.log"
+- local_action: copy content="{{ ceph_21 }}" dest="{{ log_dir }}/21-ceph.log"
+
+
+- name: 22-ceph auth_allow_insecure_global_id_reclaim
+  command: ceph config set mon auth_allow_insecure_global_id_reclaim false
+  register: ceph_22
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_22 }}" dest="{{ log_dir }}/22-ceph.log"
+

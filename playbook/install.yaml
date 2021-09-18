@@ -1,10 +1,11 @@
-- name: Install ceph storagenode
-  become: yes
-  hosts: all
-  gather_facts: yes  
-  tasks:
-  - include_tasks: tasks/vagrant_ssh.yaml
-    when: ansible_facts.virtualization_type == "virtualbox"
+#- name: Install ceph storagenode
+#  become: yes
+#  hosts: all
+#  gather_facts: yes  
+#  tasks:
+#  - include_tasks: tasks/vagrant_ssh.yaml
+#    when: ansible_facts.virtualization_type == "virtualbox"
+
 
 - name: Install hosts file etc
   become: yes
@@ -18,20 +19,74 @@
       mode: '0644'
       owner: root
       group: root
+      
+  - name: cp ssh config
+    template:
+      src:  config
+      dest: /root/.ssh/config
+      mode: '0400'
+      owner: root
+      group: root
+      
+  - name: cp rbd_client 
+    template:
+      src:  rbd-client.service
+      dest: /etc/systemd/system/rbd-client.service
+      mode: '0644'
+      owner: root
+      group: root
+
+  - name: Install the prerequisite packeage
+    apt:
+      name: "{{ packages }}"
+      state: present
+      update_cache: yes
+    vars:
+      packages:
+       - apt-transport-https
+       - ca-certificates
+       - curl
+       - software-properties-common
+       - ntp
+       - python-apt
+
+
+- name: Install ceph management node
+  become: yes
+  hosts:
+    - master1
+    - master2
+  tasks:
+  #
+  # ceph-deploy のインストール
+  # 
+  - name: Add Ceph GPG key
+    apt_key: url=https://download.ceph.com/keys/release.asc
+
+  - name: Add Ceph APT repository
+    apt_repository:
+       repo: deb https://download.ceph.com/debian-octopus/ {{ansible_distribution_release}} main
+
+  - name: Install the prerequisite packeage
+    apt:
+      name: "{{ packages }}"
+      state: present
+      update_cache: yes
+    vars:
+      packages:
+      - ceph-deploy
+      - ceph-mgr-dashboard
+  - local_action: file path="{{ log_dir }}" state=directory owner=root group=root mode=0755  
+
 
 - name: Install ceph management node
   connection: local
   become: yes
-  hosts:
-    - master
+  hosts: master1
   roles:
     - ceph_management
 
-- name: Install ceph storagenode
-  become: yes
-  hosts: all
-  roles:
-    - ceph_storagenode
+
 
 
 

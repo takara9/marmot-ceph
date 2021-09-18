@@ -71,7 +71,7 @@ Welcome to Ubuntu 18.04.3 LTS (GNU/Linux 4.15.0-72-generic x86_64)
 <中略>
 
 vagrant@master:~$ sudo -s
-root@master:~# ceph-deploy install --release nautilus client
+root@master:~# ceph-deploy install --release octopus client
 root@master:~# ceph-deploy admin client
 ~~~
 
