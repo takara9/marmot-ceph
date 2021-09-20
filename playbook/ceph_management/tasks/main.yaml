@@ -1,49 +1,3 @@
-#- name: Install the prerequisite packeage
-#  apt:
-#    name: "{{ packages }}"
-#    state: present
-#    update_cache: yes
-#  vars:
-#    packages:
-#    - apt-transport-https
-#    - ca-certificates
-#    - curl
-#    - software-properties-common
-#    - ntp
-#    - python-apt
-
-#- name: cp ssh config
-#  template:
-#    src:  config
-#    dest: /root/.ssh/config
-#    mode: '0400'
-#    owner: root
-#    group: root
-
-
-#
-# ceph-deploy のインストール
-# 
-#- name: Add Ceph GPG key
-#  apt_key: url=https://download.ceph.com/keys/release.asc
-#
-#- name: Add Ceph APT repository
-#  apt_repository:
-#     repo: deb https://download.ceph.com/debian-octopus/ {{ansible_distribution_release}} main
-#
-#- name: Install the prerequisite packeage
-#  apt:
-#    name: "{{ packages }}"
-#    state: present
-#    update_cache: yes
-#  vars:
-#    packages:
-#    - ceph-deploy
-#    - ceph-mgr-dashboard
-#- local_action: file path="{{ log_dir }}" state=directory owner=root group=root mode=0755
-
-
-
 #
 # Cephのセットアップ
 #
@@ -74,7 +28,7 @@
 # Cephモニターのデプロイ　ノードを指定
 #  こちらは不要じゃないか？
 - name: 03-ceph-deploy mon create
-  command: ceph-deploy mon create master1 master2 node1 node2 node3 node4 
+  command: ceph-deploy mon create master1 master2
   register: ceph_deploy_03
   args:
     chdir: "{{ cadmin_home }}"
@@ -207,15 +161,15 @@
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_14 }}" dest="{{ log_dir }}/14-ceph.log"
 
-
+##
 ## ファイルストレージの設定
+##
 - name: 15-cpeh create pool for file storage
   command: ceph osd pool create cephfs_data 16
   register: ceph_15
   args:
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_15 }}" dest="{{ log_dir }}/15-ceph.log"
-
 
 - name: 16-ceph create pool fs metadata
   command: ceph osd pool create cephfs_metadata 4
@@ -224,7 +178,6 @@
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_16 }}" dest="{{ log_dir }}/16-ceph.log"
 
-
 - name: 17-ceph fs new cephfs 
   command: ceph fs new cephfs cephfs_metadata cephfs_data
   register: ceph_17
@@ -232,15 +185,15 @@
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_17 }}" dest="{{ log_dir }}/17-ceph.log"
 
-
+##
 ## ダッシュボードの設定
+##
 - name: 18-ceph mgr module enable dashboard
   command: ceph mgr module enable dashboard
   register: ceph_18
   args:
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_18 }}" dest="{{ log_dir }}/18-ceph.log"
-
 
 - name: 19-ceph Create self-signed certificate
   command: ceph dashboard create-self-signed-cert
@@ -265,6 +218,9 @@
 - local_action: copy content="{{ ceph_21 }}" dest="{{ log_dir }}/21-ceph.log"
 
 
+##
+## auth_allow_insecure_global_id_reclaim
+##
 - name: 22-ceph auth_allow_insecure_global_id_reclaim
   command: ceph config set mon auth_allow_insecure_global_id_reclaim false
   register: ceph_22
