@@ -1,4 +1,5 @@
 cadmin_home: /home/ubuntu
-device_name: /dev/vdb
+device_name_1: /dev/vdb
+device_name_2: /dev/vdc
 log_dir:    "{{ cadmin_home }}/ceph-logs"
 

@@ -16,3 +16,7 @@ Hyper-V,VMware,VirtualBox+vagrant,virsh+QEMU/KVM
 Ansibleの記述を工夫することで、コンテナを利用するだけでなく、
 仮想サーバーを利用するケースにおいても、ハイブリッド環境を実現できる。
 
+
+Pacific  16.2.6
+Octopus  15.2.14
+Nautilus 14.2.22

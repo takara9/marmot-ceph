@@ -49,13 +49,19 @@
        - software-properties-common
        - ntp
        - python-apt
+       - binutils
+       - binutils-common
+       - binutils-x86-64-linux-gnu
+       - blt
+       - bridge-utils
 
 
 - name: Install ceph management node
   become: yes
   hosts:
-    - master1
-    - master2
+    - mon1
+    - mon2
+    - mon3
   tasks:
   #
   # ceph-deploy のインストール
@@ -65,13 +71,14 @@
 
   - name: Add Ceph APT repository
     apt_repository:
-       repo: deb https://download.ceph.com/debian-octopus/ {{ansible_distribution_release}} main
+       repo: deb https://download.ceph.com/debian-{{ ceph_version }}/ {{ansible_distribution_release}} main
 
   - name: Install the prerequisite packeage
     apt:
       name: "{{ packages }}"
       state: present
       update_cache: yes
+      force: yes
     vars:
       packages:
       - ceph-deploy
@@ -82,7 +89,7 @@
 - name: Install ceph management node
   connection: local
   become: yes
-  hosts: master1
+  hosts: mon1
   roles:
     - ceph_management
 

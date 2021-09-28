@@ -1,8 +1,8 @@
 #
-# Cephのセットアップ
+# 
 #
-- name: 01-ceph-deploy new
-  command: ceph-deploy new master1 master2 node1 node2 node3 node4
+- name: 01 Cephをノードへデプロイ
+  command: ceph-deploy new mon1 mon2 mon3 node1 node2 node3 node4
   register: ceph_deploy_01
   args:
     chdir: "{{ cadmin_home }}"
@@ -14,30 +14,30 @@
 - wait_for:
     timeout: 100
 
-#
-# Cephインストール
-#
-- name: 02-ceph-deploy install
-  command: ceph-deploy install --release octopus master1 master2 node1 node2 node3 node4
+##
+##  Cephモジュールのインストール
+##
+- name: 02 Cephモジュールのインストール
+  command: ceph-deploy install --release {{ ceph_version }} mon1 mon2 mon3 node1 node2 node3 node4
   register: ceph_deploy_02
   args:
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_deploy_02 }}" dest="{{ log_dir }}/02-ceph-deploy.log"
 
-#
-# Cephモニターのデプロイ　ノードを指定
-#  こちらは不要じゃないか？
-- name: 03-ceph-deploy mon create
-  command: ceph-deploy mon create master1 master2
+##
+## Cephモニターのデプロイ　ノードを指定
+## 
+- name: 03 モニターノード設定
+  command: ceph-deploy mon create mon1 mon2 mon3
   register: ceph_deploy_03
   args:
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_deploy_03 }}" dest="{{ log_dir }}/03-ceph-deploy.log"
 
-#
-# Cephモニターのデプロイ　初期設定
-#
-- name: 04-ceph-deploy mon create-initial 
+##
+## Cephモニターのデプロイ　初期設定
+##
+- name: 04 モニター初期化
   command: ceph-deploy mon create-initial
   register: ceph_deploy_04
   args:
@@ -45,10 +45,10 @@
 - local_action: copy content="{{ ceph_deploy_04 }}" dest="{{ log_dir }}/04-ceph-deploy.log"
 
 #
-# 
+# Cephキーの収集
 #
-- name: 05-ceph-deploy gatherkeys 
-  command: ceph-deploy gatherkeys master1 master2 node1 node2 node3 node4
+- name: 05 キーの収集 gatherkeys 
+  command: ceph-deploy gatherkeys mon1 mon2 mon3 node1 node2 node3 node4
   register: ceph_deploy_05
   args:
     chdir: "{{ cadmin_home }}"
@@ -57,25 +57,10 @@
 
 
 ##
-## ストレージノードのセットアップ
+## モニター管理ノードの設定
 ##
-- name: 06-ceph-deploy osd create
-  command: ceph-deploy osd create --data {{ device_name }} {{ item }}
-  register: "ceph_deploy_06"
-  with_items: "{{ nodes }}"
-  args:
-    chdir: "{{ cadmin_home }}"
-- local_action: copy content="ceph_deploy_06" dest="{{ log_dir }}/06-ceph-deploy.log"
-
-
-
-#######
-
-##
-## 設定情報の配布
-##
-- name: 07-ceph-deploy admin 
-  command: ceph-deploy admin master1 master2 node1 node2 node3 node4
+- name: 07 ceph-deploy admin 
+  command: ceph-deploy admin mon1 mon2 mon3
   register: ceph_deploy_07
   with_items: nodes
   args:
@@ -83,17 +68,17 @@
 - local_action: copy content="{{ ceph_deploy_07 }}" dest="{{ log_dir }}/07-ceph-deploy.log"
 
 ##
-## マネージャーデーモン と メタデータサーバーの生成
+## マネージャーデーモン と メタデータサーバーの構成
 ##
 - name: 08-ceph-deploy
-  command: ceph-deploy mgr create master1 master2
+  command: ceph-deploy mgr create mon1 mon2 mon3
   register: ceph_deploy_08
   args:
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_deploy_08 }}" dest="{{ log_dir }}/08-ceph-deploy.log"
 
 - name: 09-ceph-deploy 
-  command: ceph-deploy mds create master1 master2
+  command: ceph-deploy mds create mon1 mon2 mon3
   register: ceph_deploy_09
   args:
     chdir: "{{ cadmin_home }}"
@@ -101,11 +86,47 @@
 
 
 
+
+##
+## ストレージノードのセットアップ
+##
+- name: 06 ストレージノードのセットアップ ディスク1
+  command: ceph-deploy osd create --data {{ device_name_1 }} {{ item }}
+  register: "ceph_deploy_06"
+  with_items: "{{ nodes }}"
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="ceph_deploy_06" dest="{{ log_dir }}/06-ceph-deploy.log"
+
+- name: 07 ストレージノードのセットアップ ディスク1
+  command: ceph-deploy osd create --data {{ device_name_2 }} {{ item }}
+  register: "ceph_deploy_06"
+  with_items: "{{ nodes }}"
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="ceph_deploy_06" dest="{{ log_dir }}/06-ceph-deploy.log"
+
+##
+## クラッシュルールの設定
+##
+- name: 08 クラッシュルールの設定
+  command: ceph osd crush tunables default
+  register: ceph_14
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_14 }}" dest="{{ log_dir }}/14-ceph.log"
+
+
+#### 
+
+
+
+###############################################
 ##
 ## オブジェクトゲートウェイの生成
 ##
 - name: 10-ceph-deploy rgw 
-  command: ceph-deploy rgw create master1 master2
+  command: ceph-deploy rgw create mon1 mon2 mon3
   register: ceph_deploy_10
   args:
     chdir: "{{ cadmin_home }}"
@@ -131,6 +152,10 @@
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_12 }}" dest="{{ log_dir }}/12-ceph.log"
 
+
+
+
+###############################################
 ##
 ## ブロック・ストレージのプール作成
 ##
@@ -140,6 +165,7 @@
   args:
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_13 }}" dest="{{ log_dir }}/13-ceph.log"
+
 
 ##
 ## ブロック・ストレージのプールのアプリを設定する
@@ -152,15 +178,41 @@
 - local_action: copy content="{{ ceph_13_5 }}" dest="{{ log_dir }}/13.5-ceph.log"
 
 ##
-## クラッシュルールの設定
+## CSI用ブロック・ストレージのプール作成
 ##
-- name: 14-ceph ceph osd crush 
-  command: ceph osd crush tunables default
-  register: ceph_14
+- name: 13-ceph create pool for block storage kubernetes
+  command: ceph osd pool create kubernetes 16
+  register: ceph_13
   args:
     chdir: "{{ cadmin_home }}"
-- local_action: copy content="{{ ceph_14 }}" dest="{{ log_dir }}/14-ceph.log"
+- local_action: copy content="{{ ceph_13 }}" dest="{{ log_dir }}/13-ceph.log"
 
+
+##
+## CSI用ブロック・ストレージのプール作成
+##
+- name: 13-ceph create pool for block storage
+  command: rbd pool init kubernetes
+  register: ceph_13
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_13 }}" dest="{{ log_dir }}/13-ceph.log"
+
+##
+## CSIでアクセスするユーザーの作成と権限設定
+##
+- name: 13-ceph create pool for block storage
+  command: ceph auth get-or-create client.kubernetes mon 'profile rbd' osd 'profile rbd pool=kubernetes' mgr 'profile rbd pool=kubernetes'
+  register: ceph_13
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_13 }}" dest="{{ log_dir }}/13-ceph.log"
+
+
+
+
+
+###############################################
 ##
 ## ファイルストレージの設定
 ##
@@ -184,6 +236,25 @@
   args:
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_17 }}" dest="{{ log_dir }}/17-ceph.log"
+
+##
+## Cephユーザーの作成
+## https://github.com/ceph/ceph-csi/blob/devel/docs/capabilities.md#cephfs
+##
+- name: 17-1-ceph create user
+  command: ceph auth get-or-create client.cephfs mon 'allow r' osd 'allow rw tag cephfs metadata=*' mgr 'allow rw'
+  register: ceph_17
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_17 }}" dest="{{ log_dir }}/17-ceph.log"
+
+- name: 17-2-ceph create user
+  command: ceph fs authorize cephfs client.cephfs2 / rw
+  register: ceph_17
+  args:
+    chdir: "{{ cadmin_home }}"
+- local_action: copy content="{{ ceph_17 }}" dest="{{ log_dir }}/17-ceph.log"
+
 
 ##
 ## ダッシュボードの設定
