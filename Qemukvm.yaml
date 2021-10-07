@@ -23,7 +23,7 @@ cluster_name: ceph
 qcow2_image: ubuntu18.04.qcow2
 os_variant:  ubuntu18.04
 
-#qcow2_image: ubuntu20.04-12.qcow2
+#qcow2_image: ubuntu20.04-amd.qcow2
 #os_variant:  ubuntu20.04
 
 ## CEPHのバージョン指定
