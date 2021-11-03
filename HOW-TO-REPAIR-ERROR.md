@@ -1,6 +1,6 @@
 # エラー発生時の修復
 
-## HEALTH_ERR データを保管するpgブロックの破損
+## CASE-1 HEALTH_ERR データを保管するpgブロックの破損
 
 エラーのメッセージ Possible data damage
 
@@ -60,7 +60,7 @@ root@mon1:~# ceph status
 
 
 
-## HEALTH_WARN モニタデーモンのダウン
+## CASE-2 HEALTH_WARN モニタのダウン
 
 エラーメッセージ 1/7 mons down, quorum mon1,mon2,mon3,node2,node3,node4
 これから、ステータスでモニターの一つ node1 のモニターが落ちていることが解る。
@@ -207,4 +207,17 @@ adding mon.node1 at [v2:172.16.0.31:3300/0,v1:172.16.0.31:6789/0]
 
 
 これで、モニターが復活していることを、ダッシュボードや 'ceph status' から確認して完了。
+
+
+
+## 参考資料
+
+1. Red Hat Ceph Storage 初期のトラブルシューティングガイド
+https://access.redhat.com/documentation/ja-jp/red_hat_ceph_storage/2/html/troubleshooting_guide/initial-troubleshooting#diagnosing-the-health-of-a-ceph-storage-cluster
+
+2. Ceph Troubleshooting PGs
+https://docs.ceph.com/en/octopus/rados/troubleshooting/troubleshooting-pg/?highlight=repair#troubleshooting-pgs
+
+3. Ceph Troubleshooting Monitors
+https://docs.ceph.com/en/octopus/rados/troubleshooting/troubleshooting-mon/
 
