@@ -210,6 +210,39 @@ adding mon.node1 at [v2:172.16.0.31:3300/0,v1:172.16.0.31:6789/0]
 
 
 
+
+## CASE-3 insufficient standby MDS daemons available
+
+mdsデーモンが複数ダウンして、警告が出る。
+
+~~~
+# ceph status
+  cluster:
+    id:     2f31e764-2087-425f-9336-10369b4ad611
+    health: HEALTH_WARN
+            insufficient standby MDS daemons available
+            1/7 mons down, quorum mon1,mon2,mon3,node2,node3,node4
+            34 daemons have recently crashed
+ 
+  services:
+    mon: 7 daemons, quorum mon1,mon2,mon3,node2,node3,node4 (age 11m), out of quorum: node1
+    mgr: mon3(active, since 2d), standbys: mon1, mon2
+    mds: cephfs:1 {0=mon3=up:active}
+    osd: 8 osds: 8 up (since 16h), 8 in (since 4w)
+    rgw: 3 daemons active (mon1, mon2, mon3)
+
+~~~
+
+mdsデーモンが落ちているノードで、リスタートを実行する。
+
+~~~
+# systemctl restart ceph-mds@mon1
+~~~
+
+
+
+
+
 ## 参考資料
 
 1. Red Hat Ceph Storage 初期のトラブルシューティングガイド
