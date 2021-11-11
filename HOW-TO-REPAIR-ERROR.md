@@ -170,6 +170,7 @@ root@node1:/var/lib/ceph/mon# ls
 ceph-node1
 root@node1:/var/lib/ceph/mon# rm -fr ceph-node1/
 root@node1:/var/lib/ceph/mon# mkdir  ceph-node1/
+root@node1:/var/lib/ceph/mon# chown ceph:ceph ceph-node1/
 ~~~
 
 キーリングファイルとマップファイルを一時的に置く場所を作る。
@@ -198,15 +199,20 @@ node1のモニターを作成する。
 root@node1:/var/lib/ceph/mon# ceph-mon -i node1 --mkfs --monmap tmp/mapfile --keyring tmp/ceph.keyring
 ~~~
 
-Cephクラスタのメンバーに作成したnode1のモニターを追加する
+Cephクラスタのメンバーに作成したnode1のモニターを開始する。
 
 ~~~
-root@node1:/var/lib/ceph/mon# ceph mon add node1 172.16.0.31
-adding mon.node1 at [v2:172.16.0.31:3300/0,v1:172.16.0.31:6789/0]
+root@node1:/var/lib/ceph/mon# ceph-mon -i node1 --public-addr 172.16.0.31
 ~~~
 
+これで、モニターが復活していることを、ダッシュボードや 'ceph status' から確認する。
 
-これで、モニターが復活していることを、ダッシュボードや 'ceph status' から確認して完了。
+
+この状態は、コマンドラインから直接モニターデーモンを起動したことになるので、
+ceph mon ok-to-stop node1
+
+<<<書きかけ>>>
+
 
 
 
@@ -239,6 +245,29 @@ mdsデーモンが落ちているノードで、リスタートを実行する�
 # systemctl restart ceph-mds@mon1
 ~~~
 
+
+
+## CASE-4 daemons have recently crashed
+
+以下の状態をクリアする方法
+
+~~~
+root@node1:/var/lib/ceph/mon# ceph status
+  cluster:
+    id:     2f31e764-2087-425f-9336-10369b4ad611
+    health: HEALTH_WARN
+            28 daemons have recently crashed
+~~~
+
+以下のようにクラッシュのリストを表示して、詳細を確認、個別に消すか、全部を一度に消す
+
+~~~
+ceph crash ls
+ceph crash info 2021-11-09T17:19:54.048597Z_442ccb50-c02f-4be0-978c-7540f87128c7
+ceph crash archive 2021-11-09T17:19:54.048597Z_442ccb50-c02f-4be0-978c-7540f87128c7
+または
+ceph crash archive-all
+~~~
 
 
 
