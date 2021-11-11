@@ -206,10 +206,11 @@ root@node1:/var/lib/ceph/mon# ceph-mon -i node1 --public-addr 172.16.0.31
 ~~~
 
 これで、モニターが復活していることを、ダッシュボードや 'ceph status' から確認する。
+この状態は、コマンドラインから直接モニターデーモンを起動したことになるので、'ceph mon ok-to-stop node1'を実行
+再起動して、'systemctl status ceph-mon@node1' のコマンドで正常に稼働していることを確認する。
 
 
-この状態は、コマンドラインから直接モニターデーモンを起動したことになるので、
-ceph mon ok-to-stop node1
+
 
 <<<書きかけ>>>
 
