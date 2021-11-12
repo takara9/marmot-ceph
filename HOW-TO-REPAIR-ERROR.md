@@ -205,16 +205,7 @@ Cephクラスタのメンバーに作成したnode1のモニターを開始す�
 root@node1:/var/lib/ceph/mon# ceph-mon -i node1 --public-addr 172.16.0.31
 ~~~
 
-これで、モニターが復活していることを、ダッシュボードや 'ceph status' から確認する。
-この状態は、コマンドラインから直接モニターデーモンを起動したことになるので、'ceph mon ok-to-stop node1'を実行
-再起動して、'systemctl status ceph-mon@node1' のコマンドで正常に稼働していることを確認する。
-
-
-
-
-<<<書きかけ>>>
-
-
+これで、モニターが復活していることを、ダッシュボードや 'ceph status' から確認する。この状態は、コマンドラインから直接モニターデーモンを起動したことになるので、'ceph mon ok-to-stop node1'で停止させる。そして、'systemctl start ceph-mon@node1' でスタートさせる。そして、'systemctl status ceph-mon@node1' のコマンドで正常に稼働していることを確認する。
 
 
 
@@ -269,6 +260,56 @@ ceph crash archive 2021-11-09T17:19:54.048597Z_442ccb50-c02f-4be0-978c-7540f8712
 または
 ceph crash archive-all
 ~~~
+
+
+## CASE-5 PVCは出来るが、PodがContainerCreating から何時間経過しても進まない。
+
+以下の様な状態になり、先へ進まなくなる。
+
+~~~
+maho:rbd maho$ kubectl get pod
+NAME                          READY   STATUS              RESTARTS   AGE
+test-rbd-1                    0/1     ContainerCreating   0          25s
+~~~
+
+'kubectl describe pod' でEventログを表示すると、以下のようなエラーメッセージが表示される。
+
+~~~
+Events:
+  Type     Reason                  Age               From                     Message
+  ----     ------                  ----              ----                     -------
+  Warning  FailedMount             1s (x6 over 33s)  kubelet                  MountVolume.MountDevice failed for volume "pvc-ffa8a9de-6fed-4663-9279-a03441df1f84" : rpc error: code = Aborted desc = an operation with the given Volume ID 0001-0024-2f31e764-2087-425f-9336-10369b4ad611-0000000000000008-436bdf6e-4375-11ec-a9c0-225c7abf2bb3 already exists
+~~~
+
+Cephのモニターノードにログインして、ヘルスチュックしてもOKとなる場合、CSIプラグインに問題があると判別できる。
+
+~~~
+root@mon1:~# ceph health
+HEALTH_OK
+~~~
+
+
+対応方法は、CSIプラグインのポッドを削除して再スタートさせる。
+
+~~~
+maho:rbd maho$ kubectl get pod -n ceph-csi
+NAME                                            READY   STATUS    RESTARTS   AGE
+csi-rbdplugin-4j8pf                             3/3     Running   0          27d
+csi-rbdplugin-fdvs9                             3/3     Running   3          27d
+csi-rbdplugin-provisioner-56f98557c8-lcd7p      7/7     Running   0          9m58s
+csi-rbdplugin-provisioner-56f98557c8-nvxkj      7/7     Running   0          6m21s
+csi-rbdplugin-provisioner-56f98557c8-xr6xt      7/7     Running   0          6m49s
+csi-rbdplugin-w9gqk                             3/3     Running   0          27d
+maho:rbd maho$ kubectl delete pod -n ceph-csi csi-rbdplugin-4j8pf 
+pod "csi-rbdplugin-4j8pf" deleted
+maho:rbd maho$ kubectl delete pod -n ceph-csi csi-rbdplugin-fdvs9 
+pod "csi-rbdplugin-fdvs9" deleted
+maho:rbd maho$ kubectl delete pod -n ceph-csi csi-rbdplugin-w9gqk  
+pod "csi-rbdplugin-w9gqk" deleted
+~~~
+
+これで、再度デプロイを行ってみると、Podの生成とPVCのマウントに成功した。
+
 
 
 
