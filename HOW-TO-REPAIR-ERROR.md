@@ -313,6 +313,69 @@ pod "csi-rbdplugin-w9gqk" deleted
 
 
 
+## CASE-6 ceph statusが応答しない。 ブラウザのCeph consoleにアクセスできない。
+
+Cephのモニターノードにログインして、'ceph status' を実行しても応答がない。
+ブラウザで、Cephコンソールにアクセスしても、応答がない。
+
+原因は、ファイルシステムに空きスペースが無くなり、書き込みが出来なくなっている。
+
+~~~
+root@mon1:~# df -h
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           395M   41M  355M  11% /run
+/dev/vda2        12G   12G     0 100% /
+tmpfs           2.0G     0  2.0G   0% /dev/shm
+tmpfs           5.0M     0  5.0M   0% /run/lock
+tmpfs           2.0G     0  2.0G   0% /sys/fs/cgroup
+tmpfs           395M     0  395M   0% /run/user/1000
+root@mon1:~# du / |sort -rn |less
+12300540        /
+9395984 /var
+8015296 /var/log
+7293312 /var/log/ceph
+2122288 /usr
+1287536 /var/lib
+1090020 /var/lib/ceph
+1089912 /var/lib/ceph/mon
+1089908 /var/lib/ceph/mon/ceph-mon1
+1089892 /var/lib/ceph/mon/ceph-mon1/store.db
+846224  /usr/lib
+719664  /var/log/journal
+686880  /var/log/journal/b40e439c277f11ec9662c766898227f6
+686572  /usr/bin
+625248  /lib
+~~~
+
+対策として、ノードのログを別のサーバーに転送したあとログを削除して、再起動する。
+
+~~~
+root@mon1:/var/log/ceph# rm *.gz
+root@mon1:/var/log/ceph# df -h
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           395M   41M  355M  11% /run
+/dev/vda2        12G   12G     0 100% /
+tmpfs           2.0G     0  2.0G   0% /dev/shm
+tmpfs           5.0M     0  5.0M   0% /run/lock
+tmpfs           2.0G     0  2.0G   0% /sys/fs/cgroup
+tmpfs           395M     0  395M   0% /run/user/1000
+
+root@mon1:/var/log/ceph# rm ceph.log.1
+root@mon1:/var/log/ceph# df -h
+Filesystem      Size  Used Avail Use% Mounted on
+udev            1.9G     0  1.9G   0% /dev
+tmpfs           395M   41M  355M  11% /run
+/dev/vda2        12G  4.8G  6.4G  44% /
+tmpfs           2.0G     0  2.0G   0% /dev/shm
+tmpfs           5.0M     0  5.0M   0% /run/lock
+tmpfs           2.0G     0  2.0G   0% /sys/fs/cgroup
+tmpfs           395M     0  395M   0% /run/user/1000
+~~~
+
+すべてのノードの対処が完了したら、ceph status のコマンドが正常に戻る。
+
 
 ## 参考資料
 
