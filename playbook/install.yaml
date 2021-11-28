@@ -1,12 +1,3 @@
-#- name: Install ceph storagenode
-#  become: yes
-#  hosts: all
-#  gather_facts: yes  
-#  tasks:
-#  - include_tasks: tasks/vagrant_ssh.yaml
-#    when: ansible_facts.virtualization_type == "virtualbox"
-
-
 - name: Install hosts file etc
   become: yes
   hosts: all
@@ -54,6 +45,47 @@
        - binutils-x86-64-linux-gnu
        - blt
        - bridge-utils
+
+  #
+  # スワップ領域の無効化
+  #
+  - name: Disable SWAP since kubernetes can't work with swap enabled (1/2)
+    command: swapoff -a
+
+  - name: Disable SWAP in fstab since kubernetes can't work with swap enabled (2/2)
+    replace:
+      path: /etc/fstab
+      regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+      replace: '# \1'
+
+  - name: Ansible delete swap file glob
+    find:
+      paths: /
+      patterns: "swap.img"
+    register: files_to_delete
+
+  - name: Ansible remove swap file glob
+    file:
+      path: "{{ item.path }}"
+      state: absent
+    with_items: "{{ files_to_delete.files }}"
+
+
+  ## Cephログ領域を設定
+  - name: Make filesystem /dev/vdb
+    filesystem:
+      fstype: ext4
+      dev: /dev/vdb
+    when: ansible_facts.devices.vdb is defined
+
+  - name: Mount /dev/vdb
+    mount:
+      path: "/var/log/ceph"
+      src:  /dev/vdb
+      fstype: ext4
+      state: mounted
+    when: ansible_facts.devices.vdb is defined
+
 
 
 - name: Install ceph management node

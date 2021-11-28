@@ -1,11 +1,25 @@
 #
 # Cephクラスタの構成
 #
-domain: labs.local
+domain: labo.local
+cluster_name: ceph
 
 ## Hypervisor type
 ##  kvm : QEMU+KVM + virsh
 hypervisor: kvm
+
+
+## 仮想マシンイメージの設定
+##
+image_template_path: /home/images
+image_default_path:  /stg1
+
+qcow2_image: ubuntu18.04.qcow2
+os_variant:  ubuntu18.04
+
+#qcow2_image: ubuntu20.04-amd.qcow2
+#os_variant:  ubuntu20.04
+
 
 ## Cluster Network
 private_ip_subnet: 172.16.0.0/16
@@ -19,12 +33,6 @@ net_dev_public:  enp3s0
 public_ip_gw:  192.168.1.1
 public_ip_dns: 192.168.1.8
 
-cluster_name: ceph
-qcow2_image: ubuntu18.04.qcow2
-os_variant:  ubuntu18.04
-
-#qcow2_image: ubuntu20.04-amd.qcow2
-#os_variant:  ubuntu20.04
 
 ## CEPHのバージョン指定
 # hosts_kvmの変数に設定する
@@ -36,8 +44,15 @@ vm_spec:
     memory: 4096
     private_ip: "172.16.0.31"
     storage:
-    - 100
-    - 100
+    - name: log
+      size: 10
+      path: /stg1
+    - name: data1
+      size: 100
+      path: /stg1
+    - name: data2
+      size: 100
+      path: /stg1
     playbook: install.yaml
     comment:  "Ceph storage node #1"
 
@@ -46,8 +61,15 @@ vm_spec:
     memory: 4096
     private_ip: "172.16.0.32"
     storage:
-    - 100
-    - 100
+    - name: log
+      size: 10
+      path: /stg1
+    - name: data1
+      size: 100
+      path: /stg1
+    - name: data2
+      size: 100
+      path: /stg1
     playbook: install.yaml
     comment:  "Ceph storage node #2"
 
@@ -56,8 +78,15 @@ vm_spec:
     memory: 4096
     private_ip: "172.16.0.33"
     storage:
-    - 100
-    - 100
+    - name: log
+      size: 10
+      path: /stg1
+    - name: data1
+      size: 100
+      path: /stg1
+    - name: data2
+      size: 100
+      path: /stg1
     playbook: install.yaml
     comment:  "Ceph storage node #3"
 
@@ -66,14 +95,25 @@ vm_spec:
     memory: 4096
     private_ip: "172.16.0.34"
     storage:
-    - 100
-    - 100
+    - name: log
+      size: 10
+      path: /stg1
+    - name: data1
+      size: 100
+      path: /stg1
+    - name: data2
+      size: 100
+      path: /stg1
     playbook: install.yaml
     comment:  "Ceph storage node #4"
 
   - name: "mon3"
     cpu: 1
-    memory: 4096
+    memory: 4096    
+    storage:
+    - name: log
+      size: 10
+      path: /stg1
     private_ip: "172.16.0.23"
     public_ip:  "192.168.1.229"
     playbook: install.yaml
@@ -81,7 +121,11 @@ vm_spec:
 
   - name: "mon2"
     cpu: 1
-    memory: 4096
+    memory: 4096    
+    storage:
+    - name: log
+      size: 10
+      path: /stg1
     private_ip: "172.16.0.22"
     public_ip:  "192.168.1.228"
     playbook: install.yaml
@@ -90,6 +134,10 @@ vm_spec:
   - name: "mon1"
     cpu: 1
     memory: 4096
+    storage:
+    - name: log
+      size: 10
+      path: /stg1
     private_ip: "172.16.0.21"
     public_ip:  "192.168.1.227"
     playbook: install.yaml
