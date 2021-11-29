@@ -196,13 +196,13 @@ got monmap epoch 2
 node1のモニターを作成する。
 
 ~~~
-root@node1:/var/lib/ceph/mon# ceph-mon -i node1 --mkfs --monmap tmp/mapfile --keyring tmp/ceph.keyring
+root@node1:/var/lib/ceph/mon# sudo -u ceph ceph-mon -i node1 --mkfs --monmap tmp/mapfile --keyring tmp/ceph.keyring
 ~~~
 
 Cephクラスタのメンバーに作成したnode1のモニターを開始する。
 
 ~~~
-root@node1:/var/lib/ceph/mon# ceph-mon -i node1 --public-addr 172.16.0.31
+root@node1:/var/lib/ceph/mon# sudo -u ceph ceph-mon -i node1 --public-addr 172.16.0.31
 ~~~
 
 これで、モニターが復活していることを、ダッシュボードや 'ceph status' から確認する。この状態は、コマンドラインから直接モニターデーモンを起動したことになるので、'ceph mon ok-to-stop node1'で停止させる。そして、'systemctl start ceph-mon@node1' でスタートさせる。そして、'systemctl status ceph-mon@node1' のコマンドで正常に稼働していることを確認する。
@@ -375,6 +375,18 @@ tmpfs           395M     0  395M   0% /run/user/1000
 ~~~
 
 すべてのノードの対処が完了したら、ceph status のコマンドが正常に戻る。
+
+
+## CASE-7 モニターがクラッシュ、モニターデータベースに不整合が発生する
+
+dmesg や /var/log/syslog に記録されたNICのリセット発生時刻 および、
+/var/log/ceph/mon/ceph-mon.***.log に記録されたmonデーモンのクラッシュ発生時刻が一致していれば
+NICの不具合が原因の可能性が高い。
+
+その場合、NICを交換して様子を見る。
+
+
+
 
 
 ## 参考資料
