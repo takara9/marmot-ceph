@@ -12,7 +12,7 @@ hypervisor: kvm
 ## 仮想マシンイメージの設定
 ##
 image_template_path: /home/images
-image_default_path:  /stg1
+image_default_path:  /stg2
 
 qcow2_image: ubuntu18.04.qcow2
 os_variant:  ubuntu18.04
@@ -35,7 +35,7 @@ public_ip_dns: 192.168.1.8
 
 
 ## CEPHのバージョン指定
-# hosts_kvmの変数に設定する
+# todo hosts_kvmの変数に設定する
 
 ### Master, Storage Node, Test Client
 vm_spec:
@@ -46,13 +46,13 @@ vm_spec:
     storage:
     - name: log
       size: 10
-      path: /stg1
+      path: /stg2
     - name: data1
       size: 100
-      path: /stg1
+      path: /stg2
     - name: data2
       size: 100
-      path: /stg1
+      path: /stg2
     playbook: install.yaml
     comment:  "Ceph storage node #1"
 
@@ -63,13 +63,13 @@ vm_spec:
     storage:
     - name: log
       size: 10
-      path: /stg1
+      path: /stg2
     - name: data1
       size: 100
-      path: /stg1
+      path: /stg2
     - name: data2
       size: 100
-      path: /stg1
+      path: /stg2
     playbook: install.yaml
     comment:  "Ceph storage node #2"
 
@@ -80,13 +80,13 @@ vm_spec:
     storage:
     - name: log
       size: 10
-      path: /stg1
+      path: /stg2
     - name: data1
       size: 100
-      path: /stg1
+      path: /stg2
     - name: data2
       size: 100
-      path: /stg1
+      path: /stg2
     playbook: install.yaml
     comment:  "Ceph storage node #3"
 
@@ -97,13 +97,13 @@ vm_spec:
     storage:
     - name: log
       size: 10
-      path: /stg1
+      path: /stg2
     - name: data1
       size: 100
-      path: /stg1
+      path: /stg2
     - name: data2
       size: 100
-      path: /stg1
+      path: /stg2
     playbook: install.yaml
     comment:  "Ceph storage node #4"
 
@@ -113,7 +113,7 @@ vm_spec:
     storage:
     - name: log
       size: 10
-      path: /stg1
+      path: /stg2
     private_ip: "172.16.0.23"
     public_ip:  "192.168.1.229"
     playbook: install.yaml
@@ -125,7 +125,7 @@ vm_spec:
     storage:
     - name: log
       size: 10
-      path: /stg1
+      path: /stg2
     private_ip: "172.16.0.22"
     public_ip:  "192.168.1.228"
     playbook: install.yaml
@@ -137,7 +137,7 @@ vm_spec:
     storage:
     - name: log
       size: 10
-      path: /stg1
+      path: /stg2
     private_ip: "172.16.0.21"
     public_ip:  "192.168.1.227"
     playbook: install.yaml
