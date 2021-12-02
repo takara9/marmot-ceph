@@ -53,6 +53,9 @@ vm_spec:
     - name: data2
       size: 100
       path: /stg2
+    - name: data3
+      size: 100
+      path: /stg3
     playbook: install.yaml
     comment:  "Ceph storage node #1"
 
@@ -70,6 +73,9 @@ vm_spec:
     - name: data2
       size: 100
       path: /stg2
+    - name: data3
+      size: 100
+      path: /stg3
     playbook: install.yaml
     comment:  "Ceph storage node #2"
 
@@ -87,6 +93,9 @@ vm_spec:
     - name: data2
       size: 100
       path: /stg2
+    - name: data3
+      size: 100
+      path: /stg3
     playbook: install.yaml
     comment:  "Ceph storage node #3"
 
@@ -104,6 +113,9 @@ vm_spec:
     - name: data2
       size: 100
       path: /stg2
+    - name: data3
+      size: 100
+      path: /stg3
     playbook: install.yaml
     comment:  "Ceph storage node #4"
 
