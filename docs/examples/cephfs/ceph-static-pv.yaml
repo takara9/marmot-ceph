@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: cephfs-static-pv
+spec:
+  accessModes:
+  - ReadWriteMany
+  capacity:
+    storage: 1Gi
+  csi:
+    driver: cephfs.csi.ceph.com
+    nodeStageSecretRef:
+      # node stage secret name
+      name: csi-cephfs-secret
+      # node stage secret namespace where above secret is created
+      namespace: default
+    volumeAttributes:
+      # Required options from storageclass parameters need to be added in volumeAttributes
+      "clusterID": "e5687936-d583-445c-9ed6-dba05bb78eec"
+      "fsName": "myfs"
+      "staticVolume": "true"
+      "rootPath": /volumes/testGroup/testSubVolume/d4b2e372-9b46-48df-b96b-520a46bd68cd
+    # volumeHandle can be anything, need not to be same
+    # as PV name or volume name. keeping same for brevity
+    volumeHandle: cephfs-static-pv
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem

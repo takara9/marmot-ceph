@@ -1,0 +1,18 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: csi-cephfs-pod-static
+spec:
+  containers:
+    - name: ubuntu-pod
+      image: maho/my-ubuntu:0.1
+      volumeMounts:
+        - name: mypvc
+          mountPath: /mnt
+  volumes:
+    - name: mypvc
+      persistentVolumeClaim:
+        claimName: cephfs-static-pvc
+        readOnly: false
+
