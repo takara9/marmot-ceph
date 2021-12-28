@@ -155,12 +155,12 @@ vm_spec:
     playbook: install.yaml
     comment: "Ceph Management node #1"
 
-  - name: "client"
-    cpu: 1
-    memory: 2048
-    private_ip: "172.16.0.40"
-    playbook: install.yaml
-    comment:  "Ceph client node"
+#  - name: "client"
+#    cpu: 1
+#    memory: 2048
+#    private_ip: "172.16.0.40"
+#    playbook: install.yaml
+#    comment:  "Ceph client node"
 
 
 

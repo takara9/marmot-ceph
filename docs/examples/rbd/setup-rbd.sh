@@ -13,4 +13,4 @@ kubectl apply -f storageclass.yaml
 kubectl get po
 
 echo "kubectl patch storageclass csi-rbd-sc -p \'{\"metadata\": {\"annotations\":{\"storageclass.kubernetes.io\/is-default-class\":\"true\"}}}'\""
-
+kubectl patch storageclass csi-rbd-sc -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
