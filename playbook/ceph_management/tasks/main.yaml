@@ -242,7 +242,8 @@
 ## https://github.com/ceph/ceph-csi/blob/devel/docs/capabilities.md#cephfs
 ##
 - name: 17-1-ceph create user
-  command: ceph auth get-or-create client.cephfs mon 'allow r' osd 'allow rw tag cephfs metadata=*' mgr 'allow rw'
+  #command: ceph auth get-or-create client.cephfs mon 'allow r' osd 'allow rw tag cephfs metadata=*' mgr 'allow rw'
+  command: ceph auth get-or-create client.cephfs mon 'allow r' osd 'allow rw tag cephfs *=*' mgr 'allow rw' mds 'allow rw'
   register: ceph_17
   args:
     chdir: "{{ cadmin_home }}"
