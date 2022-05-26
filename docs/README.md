@@ -27,7 +27,7 @@ Kubernetes上で、ceph の CSIを担うポッドを起動しなければなら�
 
 ~~~
 kubectl create ns ceph-csi
-kubectl config set-context ceph --namespace=ceph-csi --cluster=kubernetes --user=admin
+kubectl config set-context ceph --namespace=ceph-csi --cluster=kubernetes --user=kubernetes-admin
 kubectl config use-context ceph
 kubectl config get-contexts
 ~~~
