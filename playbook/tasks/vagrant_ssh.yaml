@@ -1,14 +1,14 @@
-- name: Check golang tar
-  stat:
-    path: /vagrant/playbook/templates/id_rsa
-  register: id_rsa
+#- name: Check golang tar
+#  stat:
+#    path: /vagrant/playbook/templates/id_rsa
+#  register: id_rsa
 
-- name: generate ssh key
-  shell: |
-    ssh-keygen -t rsa -N '' -f id_rsa
-  args:
-    chdir: /vagrant/playbook/templates
-  when: id_rsa.stat.exists == False
+#- name: generate ssh key
+#  shell: |
+#    ssh-keygen -t rsa -N '' -f id_rsa
+#  args:
+#    chdir: /vagrant/playbook/templates
+#  when: id_rsa.stat.exists == False
 
 - name: cp id_rsa root for ssh remote command
   template:
@@ -34,11 +34,11 @@
     owner: root
     group: root
 
-- name: cp id_rsa vagrant for remote op
-  template:
-    src:  id_rsa
-    dest: /home/vagrant/.ssh/id_rsa
-    mode: '0600'
-    owner: vagrant
-    group: vagrant
+#- name: cp id_rsa vagrant for remote op
+#  template:
+#    src:  id_rsa
+#    dest: /home/vagrant/.ssh/id_rsa
+#    mode: '0600'
+#    owner: vagrant
+#    group: vagrant
 

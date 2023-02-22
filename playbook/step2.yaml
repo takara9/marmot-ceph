@@ -1,0 +1,93 @@
+- name: Install hosts file etc
+  become: yes
+  hosts: all
+  gather_facts: yes  
+  tasks:
+  - name: add Ceph repo
+    shell: |
+      curl --silent https://download.ceph.com/keys/release.asc | sudo apt-key add -
+      apt-add-repository https://download.ceph.com/debian-pacific
+      apt-get update
+    args:
+      chdir: /root
+
+- name: Install cephadm
+  become: yes
+  hosts: node1
+  tasks:
+  - name: install cephadm
+    shell: |
+      apt install -y cephadm
+    args:
+      chdir: /root
+
+  - name: start node1 as bootstrap node 
+    shell: |
+      cephadm bootstrap --mon-ip 172.16.0.31
+    args:
+      chdir: /root
+    register: bootstrap
+
+  #- debug: msg="{{ bootstrap.stdout_lines }}"
+  - debug: msg="{{ bootstrap }}"
+  
+  #  待ちが必要
+  - wait_for:
+      timeout: 10
+
+
+  - name: add device of node1 as osd
+    shell: |
+      cephadm shell -- ceph orch daemon add osd node1:/dev/vdb
+    args:
+      chdir: /root
+
+
+
+  - name: copy pub key
+    shell: |
+      ssh-copy-id -f -i /etc/ceph/ceph.pub root@172.16.0.32
+      ssh-copy-id -f -i /etc/ceph/ceph.pub root@172.16.0.33
+      ssh-copy-id -f -i /etc/ceph/ceph.pub root@172.16.0.34
+      ssh-copy-id -f -i /etc/ceph/ceph.pub root@172.16.0.35    
+    args:
+      chdir: /root
+
+  #  待ちが必要
+  - wait_for:
+      timeout: 30
+
+  - name: add Ceph node
+    shell: |
+        cephadm shell -- ceph orch host add node2 172.16.0.32
+        cephadm shell -- ceph orch host add node3 172.16.0.33
+        cephadm shell -- ceph orch host add node4 172.16.0.34
+        cephadm shell -- ceph orch host add node5 172.16.0.35	
+    args:
+      chdir: /root
+
+  #  待ちが必要
+  - wait_for:
+      timeout: 30
+
+  - name: add dev as OSD
+    shell: |
+        cephadm shell -- ceph orch daemon add osd node2:/dev/vdb
+        cephadm shell -- ceph orch daemon add osd node3:/dev/vdb
+        cephadm shell -- ceph orch daemon add osd node4:/dev/vdb	
+        cephadm shell -- ceph orch daemon add osd node5:/dev/vdb
+    args:
+      chdir: /root
+
+
+  - name: Check Status
+    shell: |
+       cephadm shell -- ceph status
+    args:
+      chdir: /root
+    register: check_status
+
+  - debug: msg="{{ check_status }}"
+
+
+

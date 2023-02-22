@@ -300,3 +300,4 @@
     chdir: "{{ cadmin_home }}"
 - local_action: copy content="{{ ceph_22 }}" dest="{{ log_dir }}/22-ceph.log"
 
+

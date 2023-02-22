@@ -1,0 +1,161 @@
+- name: Install hosts file etc
+  become: yes
+  hosts: all
+  gather_facts: yes  
+  tasks:
+  - name: cp hosts for remote host
+    template:
+      src:  hosts
+      dest: /etc/hosts
+      mode: '0644'
+      owner: root
+      group: root
+      
+  - name: cp ssh config
+    template:
+      src:  config
+      dest: /root/.ssh/config
+      mode: '0400'
+      owner: root
+      group: root
+
+  - name: cp id_rsa to every host
+    template:
+      src:  ~/.ssh/id_rsa
+      dest: /root/.ssh/id_rsa
+      mode: '0400'
+      owner: root
+      group: root
+
+  - name: cp rbd_client 
+    template:
+      src:  rbd-client.service
+      dest: /etc/systemd/system/rbd-client.service
+      mode: '0644'
+      owner: root
+      group: root
+
+  - name: Install the prerequisite packeage
+    apt:
+      name: "{{ packages }}"
+      state: present
+      update_cache: yes
+    vars:
+      packages:
+       - apt-transport-https
+       - ca-certificates
+       - curl
+       - software-properties-common
+       - ntp
+       - python-apt
+       - binutils
+       #- binutils-common
+       #- binutils-x86-64-linux-gnu
+       - blt
+       - bridge-utils
+
+  #
+  # スワップ領域の無効化
+  #
+  - name: Disable SWAP since kubernetes can't work with swap enabled (1/2)
+    command: swapoff -a
+
+  - name: Disable SWAP in fstab since kubernetes can't work with swap enabled (2/2)
+    replace:
+      path: /etc/fstab
+      regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+      replace: '# \1'
+
+  - name: Ansible delete swap file glob
+    find:
+      paths: /
+      patterns: "swap.img"
+    register: files_to_delete
+
+  - name: Ansible remove swap file glob
+    file:
+      path: "{{ item.path }}"
+      state: absent
+    with_items: "{{ files_to_delete.files }}"
+
+
+  ## Cephログ領域を設定
+  - name: Make filesystem /dev/vdb
+    filesystem:
+      fstype: ext4
+      dev: /dev/vdb
+    when: ansible_facts.devices.vdb is defined
+
+  - name: Mount /dev/vdb
+    mount:
+      path: "/var/log/ceph"
+      src:  /dev/vdb
+      fstype: ext4
+      state: mounted
+    when: ansible_facts.devices.vdb is defined
+
+
+
+- name: Install ceph management node
+  become: yes
+  hosts:
+    - mon1
+    - mon2
+    - mon3
+  tasks:
+  - name: update ca-certificates
+    command: apt install ca-certificates
+    
+  #
+  # ceph-deploy のインストール
+  # 
+  - name: Add Ceph GPG key
+    apt_key:
+       url: https://download.ceph.com/keys/release.asc
+       state: present
+
+  - debug: msg="deb https://download.ceph.com/debian-{{ ceph_version }}/ {{ansible_distribution_release}} main"
+
+  - name: Add Ceph APT repository
+    apt_repository:
+       repo: deb https://download.ceph.com/debian-{{ ceph_version }}/ {{ansible_distribution_release}} main
+       #update_cache: yes
+       state: present
+
+  - name: Install the prerequisite packeage 0
+    apt:
+      name: "{{ packages }}"
+      state: present
+      update_cache: yes
+      #cache_valid_time: 432000      
+      #force: yes
+    vars:
+      packages:
+      - ceph-deploy
+      - ceph-base
+  - local_action: file path="{{ log_dir }}" state=directory owner=root group=root mode=0755  
+
+#  - name: Install the prerequisite packeage 1
+#    apt:
+#      name: "{{ packages }}"
+#      state: present
+#      #update_cache: yes
+#      #cache_valid_time: 432000      
+#      #force: yes
+#    vars:
+#      packages:
+#      - ceph-mgr-dashboard
+#  - local_action: file path="{{ log_dir }}" state=directory owner=root group=root mode=0755  
+
+
+- name: Install ceph management node
+  #  connection: local
+  become: yes
+  hosts: mon1
+  roles:
+    - ceph_management
+
+
+
+
+

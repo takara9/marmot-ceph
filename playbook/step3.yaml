@@ -1,0 +1,42 @@
+- name: Install cephadm
+  become: yes
+  hosts: node1
+  tasks:
+  - name: install create pool blk_data
+    command: cephadm shell -- ceph osd pool create blk_data 16
+    args:
+      chdir: /root
+  - name: enable blk_data
+    command: cephadm shell -- ceph osd pool application enable blk_data rbd
+    args:
+      chdir: /root
+  - name: create kubernetes pool
+    command: cephadm shell -- ceph osd pool create kubernetes 16
+    args:
+      chdir: /root
+  - name: init rbd pool
+    command: cephadm shell -- rbd pool init kubernetes
+    args:
+      chdir: /root
+  - name: ceph auth get-or-create
+    command: cephadm shell -- ceph auth get-or-create client.kubernetes mon 'profile rbd' osd 'profile rbd pool=kubernetes' mgr 'profile rbd pool=kubernetes'
+    args:
+      chdir: /root
+    register: client_kubernetes
+  - debug: msg="{{ client_kubernetes }}"
+
+
+#cephadm shell -- ceph osd pool create cephfs_data 16
+#cephadm shell -- ceph osd pool create cephfs_metadata 4
+#cephadm shell -- ceph fs new cephfs cephfs_metadata cephfs_data
+#cephadm shell -- ceph auth get-or-create client.cephfs mon 'allow r' osd 'allow rw tag cephfs *=*' mgr 'allow rw' mds 'allow rw'
+#cephadm shell -- ceph fs authorize cephfs client.cephfs2 / rw
+
+#ceph-deploy rgw create mon1 mon2 mon3
+#ceph osd pool create obj_data 16
+#ceph osd map obj_data obj01
+### auth_allow_insecure_global_id_reclaim
+#ceph config set mon auth_allow_insecure_global_id_reclaim false
+
+
+

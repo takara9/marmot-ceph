@@ -1,0 +1,112 @@
+#
+# Cephクラスタの構成
+#
+domain: labo.local
+cluster_name: ceph
+
+## Hypervisor type
+##  kvm : QEMU+KVM + virsh
+hypervisor: kvm
+
+
+## 仮想マシンイメージの設定
+##
+image_template_path: /home/images
+image_default_path:  /stg2
+
+#qcow2_image: ubuntu18.04.qcow2
+#os_variant:  ubuntu18.04
+
+#qcow2_image: ubuntu20.04-amd.qcow2
+os_variant:  ubuntu20.04
+
+
+## Cluster Network
+private_ip_subnet: 172.16.0.0/16
+public_ip_subnet:  192.168.1.0/24
+
+### Network device and config
+net_dev_default: enp1s0
+net_dev_private: enp2s0
+net_dev_public:  enp3s0
+
+public_ip_gw:  192.168.1.1
+public_ip_dns: 192.168.1.8
+
+
+## CEPHのバージョン指定
+# todo hosts_kvmの変数に設定する
+
+### Master, Storage Node, Test Client
+vm_spec:
+  - name: "node1"
+    cpu: 2
+    memory: 4096
+    private_ip: "172.16.0.31"
+    public_ip:  "192.168.1.231"
+    storage:
+    - name: data
+      size: 200
+      path: /xxx
+    playbook: install.yaml
+    comment:  "Ceph storage node #1"
+
+  - name: "node2"
+    cpu: 2
+    memory: 4096
+    private_ip: "172.16.0.32"
+    public_ip:  "192.168.1.232"
+    storage:
+    - name: data
+      size: 200
+      path: /xxx
+    playbook: install.yaml
+    comment:  "Ceph storage node #2"
+
+  - name: "node3"
+    cpu: 2
+    memory: 4096
+    private_ip: "172.16.0.33"
+    public_ip:  "192.168.1.233"
+    storage:
+    - name: data
+      size: 200
+      path: /xxx
+    playbook: install.yaml
+    comment:  "Ceph storage node #3"
+
+  - name: "node4"
+    cpu: 2
+    memory: 4096
+    private_ip: "172.16.0.34"
+    public_ip:  "192.168.1.234"  
+    storage:
+    - name: data
+      size: 200
+      path: /xxx
+    playbook: install.yaml
+    comment:  "Ceph storage node #4"
+
+  - name: "node5"
+    cpu: 2
+    memory: 4096
+    private_ip: "172.16.0.35"
+    public_ip:  "192.168.1.235"    
+    storage:
+    - name: data
+      size: 200
+      path: /xxx
+    playbook: install.yaml
+    comment:  "Ceph storage node #4"
+
+
+#  - name: "client"
+#    cpu: 1
+#    memory: 2048
+#    private_ip: "172.16.0.40"
+#    playbook: install.yaml
+#    comment:  "Ceph client node"
+
+
+
+
