@@ -46,7 +46,7 @@ vm_spec:
     public_ip:  "192.168.1.231"
     storage:
     - name: data
-      size: 200
+      size: 100
       path: /xxx
     playbook: install.yaml
     comment:  "Ceph storage node #1"
@@ -58,7 +58,7 @@ vm_spec:
     public_ip:  "192.168.1.232"
     storage:
     - name: data
-      size: 200
+      size: 100
       path: /xxx
     playbook: install.yaml
     comment:  "Ceph storage node #2"
@@ -70,7 +70,7 @@ vm_spec:
     public_ip:  "192.168.1.233"
     storage:
     - name: data
-      size: 200
+      size: 100
       path: /xxx
     playbook: install.yaml
     comment:  "Ceph storage node #3"
@@ -79,10 +79,10 @@ vm_spec:
     cpu: 2
     memory: 4096
     private_ip: "172.16.0.34"
-    public_ip:  "192.168.1.234"  
+    public_ip:  "192.168.1.234"
     storage:
     - name: data
-      size: 200
+      size: 100
       path: /xxx
     playbook: install.yaml
     comment:  "Ceph storage node #4"
@@ -91,13 +91,13 @@ vm_spec:
     cpu: 2
     memory: 4096
     private_ip: "172.16.0.35"
-    public_ip:  "192.168.1.235"    
+    public_ip:  "192.168.1.235"
     storage:
     - name: data
-      size: 200
+      size: 100
       path: /xxx
     playbook: install.yaml
-    comment:  "Ceph storage node #4"
+    comment:  "Ceph storage node #5"
 
 
 #  - name: "client"

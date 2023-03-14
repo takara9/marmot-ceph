@@ -1,0 +1,28 @@
+- name: Setup Ceph Object Storage
+  become: yes
+  hosts: node1
+  tasks:
+  #ceph-deploy rgw create mon1 mon2 mon3
+  - name: need setup rados gateway
+    command: cephadm shell -- ceph status
+
+  - name: create pool
+    command: cephadm shell -- ceph osd pool create obj_data 16
+    args:
+      chdir: /root
+  - name: create map
+    command: cephadm shell -- ceph osd map obj_data obj01
+    args:
+      chdir: /root
+  - name: set mon
+    command: cephadm shell -- ceph config set mon auth_allow_insecure_global_id_reclaim false
+    args:
+      chdir: /root
+    register: client_kubernetes
+  - debug: msg="{{ client_kubernetes }}"
+
+
+
+
+
+

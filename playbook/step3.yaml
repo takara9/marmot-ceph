@@ -1,4 +1,4 @@
-- name: Install cephadm
+- name: Setup Ceph Block Storage
   become: yes
   hosts: node1
   tasks:

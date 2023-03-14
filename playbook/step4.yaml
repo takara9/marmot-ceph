@@ -1,0 +1,46 @@
+- name: Setup Cephfs
+  become: yes
+  hosts: node1
+  tasks:
+  - name: create mds
+    command: cephadm shell -- ceph fs volume create meta_svr
+    args:
+      chdir: /root
+
+  - name: create pool cephfs_data
+    command: cephadm shell -- ceph osd pool create cephfs_data 16
+    args:
+      chdir: /root
+
+  - name: create pool meta data
+    command: cephadm shell -- ceph osd pool create cephfs_metadata 4
+    args:
+      chdir: /root
+
+  - name: create cephfs
+    command: cephadm shell -- ceph fs new cephfs cephfs_metadata cephfs_data
+    args:
+      chdir: /root
+
+  - name: create user
+    command: cephadm shell -- ceph auth get-or-create client.cephfs mon 'allow r' osd 'allow rw tag cephfs *=*' mgr 'allow rw' mds 'allow rw'
+    args:
+      chdir: /root
+
+  - name: create user2
+    command: cephadm shell -- ceph fs authorize cephfs client.cephfs2 / rw
+    args:
+      chdir: /root
+    register: client_kubernetes
+  - debug: msg="{{ client_kubernetes }}"
+
+
+
+#ceph-deploy rgw create mon1 mon2 mon3
+#ceph osd pool create obj_data 16
+#ceph osd map obj_data obj01
+### auth_allow_insecure_global_id_reclaim
+#ceph config set mon auth_allow_insecure_global_id_reclaim false
+
+
+

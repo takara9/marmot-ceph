@@ -1,7 +1,7 @@
 - name: Install hosts file etc
   become: yes
   hosts: all
-  gather_facts: yes  
+  gather_facts: yes
   tasks:
   - name: add Ceph repo
     shell: |
@@ -21,7 +21,7 @@
     args:
       chdir: /root
 
-  - name: start node1 as bootstrap node 
+  - name: start node1 as bootstrap node
     shell: |
       cephadm bootstrap --mon-ip 172.16.0.31
     args:
@@ -30,7 +30,7 @@
 
   #- debug: msg="{{ bootstrap.stdout_lines }}"
   - debug: msg="{{ bootstrap }}"
-  
+
   #  待ちが必要
   - wait_for:
       timeout: 10
@@ -49,7 +49,7 @@
       ssh-copy-id -f -i /etc/ceph/ceph.pub root@172.16.0.32
       ssh-copy-id -f -i /etc/ceph/ceph.pub root@172.16.0.33
       ssh-copy-id -f -i /etc/ceph/ceph.pub root@172.16.0.34
-      ssh-copy-id -f -i /etc/ceph/ceph.pub root@172.16.0.35    
+      ssh-copy-id -f -i /etc/ceph/ceph.pub root@172.16.0.35
     args:
       chdir: /root
 
@@ -62,7 +62,7 @@
         cephadm shell -- ceph orch host add node2 172.16.0.32
         cephadm shell -- ceph orch host add node3 172.16.0.33
         cephadm shell -- ceph orch host add node4 172.16.0.34
-        cephadm shell -- ceph orch host add node5 172.16.0.35	
+        cephadm shell -- ceph orch host add node5 172.16.0.35
     args:
       chdir: /root
 
@@ -74,7 +74,7 @@
     shell: |
         cephadm shell -- ceph orch daemon add osd node2:/dev/vdb
         cephadm shell -- ceph orch daemon add osd node3:/dev/vdb
-        cephadm shell -- ceph orch daemon add osd node4:/dev/vdb	
+        cephadm shell -- ceph orch daemon add osd node4:/dev/vdb
         cephadm shell -- ceph orch daemon add osd node5:/dev/vdb
     args:
       chdir: /root

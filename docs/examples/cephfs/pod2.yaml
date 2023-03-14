@@ -7,7 +7,7 @@ spec:
   containers:
     - name: my-ubuntu
       image: maho/my-ubuntu:0.1
-      command: ["tail", "-f", "/dev/null"]      
+      command: ["tail", "-f", "/dev/null"]
       volumeMounts:
         - name: mypvc
           mountPath: /mnt

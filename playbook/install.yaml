@@ -1,7 +1,7 @@
 - name: Install hosts file etc
   become: yes
   hosts: all
-  gather_facts: yes  
+  gather_facts: yes
   tasks:
   - name: cp hosts for remote host
     template:
@@ -10,7 +10,7 @@
       mode: '0644'
       owner: root
       group: root
-      
+
   - name: cp ssh config
     template:
       src:  config
