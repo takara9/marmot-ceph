@@ -1,0 +1,194 @@
+- name: install cephadm
+  shell: |
+    apt install -y cephadm
+  args:
+    chdir: /root
+
+- name: start node1 as bootstrap node
+  shell: |
+    cephadm bootstrap --mon-ip 172.16.0.31
+  args:
+    chdir: /root
+  register: bootstrap
+
+- name: Bootstrap
+  debug: msg="{{ bootstrap.stderr_lines }}"
+
+#  待ちが必要
+- wait_for:
+    timeout: 10
+
+
+- name: add device of node1 as osd
+  shell: |
+    cephadm shell -- ceph orch daemon add osd node1:/dev/vdb
+  args:
+    chdir: /root
+
+
+- name: copy pub key
+  shell: |
+    #if [[ "{{ item.name }}" != "node1" ]]; then
+    #  ssh-copy-id -f -i /etc/ceph/ceph.pub root@{{ item.pri_ip }}
+    #fi
+    ssh-copy-id -f -i /etc/ceph/ceph.pub root@172.16.0.32
+    ssh-copy-id -f -i /etc/ceph/ceph.pub root@172.16.0.33
+    ssh-copy-id -f -i /etc/ceph/ceph.pub root@172.16.0.34
+    ssh-copy-id -f -i /etc/ceph/ceph.pub root@172.16.0.35
+  args:
+    chdir: /root
+  #loop: "{{ nodes }}"
+  register: shell_log1
+
+- debug: msg="{{ shell_log1 }}"
+
+#  待ちが必要
+- wait_for:
+    timeout: 30
+
+- name: add Ceph node
+  shell: |
+    #if [[ "{{ item.name }}" != "node1" ]]; then
+    #  cephadm shell -- ceph orch host add {{ item.name }} {{ item.pri_ip }}
+    #fi
+    cephadm shell -- ceph orch host add node2 172.16.0.32
+    cephadm shell -- ceph orch host add node3 172.16.0.33
+    cephadm shell -- ceph orch host add node4 172.16.0.34
+    cephadm shell -- ceph orch host add node5 172.16.0.35
+  args:
+    chdir: /root
+  #loop: "{{ nodes }}"
+  register: shell_log2
+
+- debug: msg="{{ shell_log2 }}"
+
+#  待ちが必要
+- wait_for:
+    timeout: 30
+
+## node1 を除外する必要がある
+- name: add dev as OSD
+  shell: |
+      #if [[ "{{ item.name }}" != "node1" ]]; then
+      #  cephadm shell -- ceph orch daemon add osd {{ item.name }}:/dev/vdb
+      #fi
+      cephadm shell -- ceph orch daemon add osd node2:/dev/vdb
+      cephadm shell -- ceph orch daemon add osd node3:/dev/vdb
+      cephadm shell -- ceph orch daemon add osd node4:/dev/vdb
+      cephadm shell -- ceph orch daemon add osd node5:/dev/vdb
+  args:
+    chdir: /root
+  #loop: "{{ nodes }}"
+  register: shell_log3
+
+- debug: msg="{{ shell_log3 }}"
+
+- name: Check Status
+  shell: |
+      cephadm shell -- ceph status
+  args:
+    chdir: /root
+  register: check_status
+
+- name: Check Status XXXXXXXXXx
+  debug: msg="{{ check_status.stderr_lines }}"
+  debug: msg="{{ check_status.stdout_lines }}"
+
+
+- name: Waitting for statble befor Block storage
+  wait_for:
+    timeout: 30
+
+#------------------------------------------------------------------------
+# ブロックストレージ
+#
+- name: install create pool blk_data
+  command: cephadm shell -- ceph osd pool create blk_data 16
+  args:
+    chdir: /root
+- name: enable blk_data
+  command: cephadm shell -- ceph osd pool application enable blk_data rbd
+  args:
+    chdir: /root
+- name: create kubernetes pool
+  command: cephadm shell -- ceph osd pool create kubernetes 16
+  args:
+    chdir: /root
+- name: init rbd pool
+  command: cephadm shell -- rbd pool init kubernetes
+  args:
+    chdir: /root
+- name: ceph auth get-or-create
+  command: cephadm shell -- ceph auth get-or-create client.kubernetes mon 'profile rbd' osd 'profile rbd pool=kubernetes' mgr 'profile rbd pool=kubernetes'
+  args:
+    chdir: /root
+  register: client_kubernetes_blk
+
+- name: CLIENT KUBERNETES
+  debug: msg="{{ client_kubernetes_blk }}"
+
+
+- name: Waitting for statble befor FILE storage
+  wait_for:
+    timeout: 30
+
+#
+# ファイルストレージ
+#
+- name: create mds
+  command: cephadm shell -- ceph fs volume create meta_svr
+  args:
+    chdir: /root
+
+- name: create pool cephfs_data
+  command: cephadm shell -- ceph osd pool create cephfs_data 4
+  args:
+    chdir: /root
+
+- name: create pool meta data
+  command: cephadm shell -- ceph osd pool create cephfs_metadata 4
+  args:
+    chdir: /root
+
+- name: create cephfs
+  command: cephadm shell -- ceph fs new cephfs cephfs_metadata cephfs_data
+  args:
+    chdir: /root
+
+- name: create user
+  command: cephadm shell -- ceph auth get-or-create client.cephfs mon 'allow r' osd 'allow rw tag cephfs *=*' mgr 'allow rw' mds 'allow rw'
+  args:
+    chdir: /root
+
+- name: create user2
+  command: cephadm shell -- ceph fs authorize cephfs client.cephfs2 / rw
+  args:
+    chdir: /root
+  register: client_kubernetes_cephfs
+- debug: msg="{{ client_kubernetes_cephfs }}"
+
+
+- name: Waitting for statble befor Object storage
+  wait_for:
+    timeout: 30
+
+#
+# オブジェクトストレージ
+#
+- name: need setup rados gateway
+  command: cephadm shell -- ceph status
+
+- name: create pool
+  command: cephadm shell -- ceph osd pool create obj_data 4
+  args:
+    chdir: /root
+- name: create map
+  command: cephadm shell -- ceph osd map obj_data obj01
+  args:
+    chdir: /root
+- name: set mon
+  command: cephadm shell -- ceph config set mon auth_allow_insecure_global_id_reclaim false
+  args:
+    chdir: /root
+  register: client_kubernetes_obs
+- debug: msg="{{ client_kubernetes_obs }}"
