@@ -12,60 +12,60 @@ os_variant:  ubuntu20.04
 vm_spec:
   - name: "node1"
     cpu: 2
-    memory: 4096
+    memory: 6144
     private_ip: "172.16.0.31"
     public_ip:  "192.168.1.231"
     storage:
     - name: data
-      size: 100
+      size: 120
       vg:   vg2
     playbook: install.yaml
     comment:  "Ceph storage node #1"
 
   - name: "node2"
     cpu: 2
-    memory: 4096
+    memory: 6144
     private_ip: "172.16.0.32"
     public_ip:  "192.168.1.232"
     storage:
     - name: data
-      size: 100
+      size: 120
       vg:   vg2
     playbook: install.yaml
     comment:  "Ceph storage node #2"
 
   - name: "node3"
     cpu: 2
-    memory: 4096
+    memory: 6144
     private_ip: "172.16.0.33"
     public_ip:  "192.168.1.233"
     storage:
     - name: data
-      size: 100
+      size: 120
       vg:   vg2
     playbook: install.yaml
     comment:  "Ceph storage node #3"
 
   - name: "node4"
     cpu: 2
-    memory: 4096
+    memory: 6144
     private_ip: "172.16.0.34"
     public_ip:  "192.168.1.234"
     storage:
     - name: data
-      size: 100
+      size: 120
       vg:   vg2
     playbook: install.yaml
     comment:  "Ceph storage node #4"
 
   - name: "node5"
     cpu: 2
-    memory: 4096
+    memory: 6144
     private_ip: "172.16.0.35"
     public_ip:  "192.168.1.235"
     storage:
     - name: data
-      size: 100
+      size: 120
       vg:   vg2
     playbook: install.yaml
     comment:  "Ceph storage node #5"

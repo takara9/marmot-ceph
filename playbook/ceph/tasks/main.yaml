@@ -94,6 +94,25 @@
 
 - debug: msg="{{ shell_log3 }}"
 
+
+- name: change device class from hdd to ssd
+  shell: |
+    cephadm shell -- ceph osd crush rm-device-class {{ item.ids }}
+    cephadm shell -- ceph osd crush set-device-class --class=ssd --ids={{ item.ids }}
+  args:
+    chdir: /root
+    executable: /bin/bash
+  loop: "{{ nodes }}"
+
+
+- name: Set 3 mon nodes 
+  shell: |
+      cephadm shell -- ceph config set mon public_network 172.16.0.0/16
+      cephadm shell -- ceph orch apply mon --placement="node1,node2,node3"     
+  args:
+    chdir: /root
+  register: check_status
+
 - name: Check Status
   shell: |
       cephadm shell -- ceph status
@@ -113,39 +132,58 @@
 #------------------------------------------------------------------------
 # ブロックストレージ
 #
-- name: install create pool blk_data
-  command: cephadm shell -- ceph osd pool create blk_data 16
-  args:
-    chdir: /root
-- name: enable blk_data
-  command: cephadm shell -- ceph osd pool application enable blk_data rbd
-  args:
-    chdir: /root
+#- name: install create pool blk_data
+#  command: cephadm shell -- ceph osd pool create blk_data 16
+#  args:
+#    chdir: /root
+#- name: enable blk_data
+#  command: cephadm shell -- ceph osd pool application enable blk_data rbd
+#  args:
+#    chdir: /root
+
+#- name: create kubernetes pool
+#  command: cephadm shell -- ceph osd pool create kubernetes 32
+#  args:
+#    chdir: /root
+#- name: init rbd pool
+#  command: cephadm shell -- rbd pool init kubernetes
+#  args:
+#    chdir: /root
+#- name: ceph auth get-or-create
+#  command: cephadm shell -- ceph auth get-or-create client.kubernetes mon 'profile rbd' osd 'profile rbd pool=kubernetes' mgr 'profile rbd pool=kubernetes'
+#  args:
+#    chdir: /root
+#  register: client_kubernetes_blk
+
 - name: create kubernetes pool
-  command: cephadm shell -- ceph osd pool create kubernetes 16
+  command: cephadm shell -- ceph osd pool create rbd 32
   args:
     chdir: /root
 - name: init rbd pool
-  command: cephadm shell -- rbd pool init kubernetes
+  command: cephadm shell -- rbd pool init rbd
   args:
     chdir: /root
+
+- name: enable rbd pool
+  command: cephadm shell -- ceph osd pool application enable rbd rbd
+  args:
+    chdir: /root
+
 - name: ceph auth get-or-create
-  command: cephadm shell -- ceph auth get-or-create client.kubernetes mon 'profile rbd' osd 'profile rbd pool=kubernetes' mgr 'profile rbd pool=kubernetes'
+  command: cephadm shell -- ceph auth get-or-create client.rbd mon 'profile rbd' osd 'profile rbd pool=rbd' mgr 'profile rbd pool=rbd'
   args:
     chdir: /root
   register: client_kubernetes_blk
-
 - name: CLIENT KUBERNETES
   debug: msg="{{ client_kubernetes_blk }}"
-
 - name: write to file
   ansible.builtin.copy:
     content: "{{ client_kubernetes_blk.stdout_lines }}"
     dest: "/nfs/ceph/client_kubernetes_blk.json"
-
 - name: extract key
   shell:
      cat /nfs/ceph/client_kubernetes_blk.json |sed "s/\\\t//g" |python3 -c 'import json,sys;print(json.load(sys.stdin)[1])' |awk '{print $3}' > /nfs/ceph/kubernets_blk.key
+
 
 - name: Waitting for statble befor FILE storage
   wait_for:
@@ -154,36 +192,46 @@
 #
 # ファイルストレージ
 #
-- name: create mds
-  command: cephadm shell -- ceph fs volume create meta_svr
-  args:
-    chdir: /root
+#- name: create mds
+#  command: cephadm shell -- ceph fs volume create meta_svr
+#  args:
+#    chdir: /root
 
-- name: create pool cephfs_data
-  command: cephadm shell -- ceph osd pool create cephfs_data 4
-  args:
-    chdir: /root
+#- name: create pool cephfs_data
+#  command: cephadm shell -- ceph osd pool create cephfs_data 32
+#  args:
+#    chdir: /root
 
-- name: create pool meta data
-  command: cephadm shell -- ceph osd pool create cephfs_metadata 4
-  args:
-    chdir: /root
+#- name: create pool meta data
+#  command: cephadm shell -- ceph osd pool create cephfs_metadata 16
+#  args:
+#    chdir: /root
+
+#- name: create cephfs
+#  command: cephadm shell -- ceph fs new cephfs cephfs_metadata cephfs_data
+#  args:
+#    chdir: /root
 
 - name: create cephfs
-  command: cephadm shell -- ceph fs new cephfs cephfs_metadata cephfs_data
+  command: cephadm shell -- ceph fs volume create fs1 --placement="node3,node4,node5"
   args:
     chdir: /root
+
+#- name: create user
+#  command: cephadm shell -- ceph auth get-or-create client.cephfs mon 'allow r' osd 'allow rw tag cephfs *=*' mgr 'allow rw' mds 'allow rw'
+#  args:
+#    chdir: /root
 
 - name: create user
-  command: cephadm shell -- ceph auth get-or-create client.cephfs mon 'allow r' osd 'allow rw tag cephfs *=*' mgr 'allow rw' mds 'allow rw'
-  args:
-    chdir: /root
-
-- name: create user2
-  command: cephadm shell -- ceph fs authorize cephfs client.cephfs2 / rw
+  command: cephadm shell -- ceph auth get-or-create client.fs1 mon 'allow r' osd 'allow rw tag cephfs *=*' mgr 'allow rw' mds 'allow rw'
   args:
     chdir: /root
   register: client_kubernetes_cephfs
+#- name: create user2
+#  command: cephadm shell -- ceph fs authorize fs1 client.fs1 / rw
+#  args:
+#    chdir: /root
+#  register: client_kubernetes_cephfs
 - debug: msg="{{ client_kubernetes_cephfs }}"
 
 - name: write to file
@@ -203,24 +251,24 @@
 #
 # オブジェクトストレージ
 #
-- name: need setup rados gateway
-  command: cephadm shell -- ceph status
+#- name: need setup rados gateway
+#  command: cephadm shell -- ceph status
 
-- name: create pool
-  command: cephadm shell -- ceph osd pool create obj_data 4
-  args:
-    chdir: /root
-- name: create map
-  command: cephadm shell -- ceph osd map obj_data obj01
-  args:
-    chdir: /root
-- name: set mon
-  command: cephadm shell -- ceph config set mon auth_allow_insecure_global_id_reclaim false
-  args:
-    chdir: /root
-  register: client_kubernetes_obs
-- debug: msg="{{ client_kubernetes_obs }}"
-- name: write to file
-  ansible.builtin.copy:
-    content: "{{ client_kubernetes_obs.stdout_lines }}"
-    dest: "/nfs/ceph/client_kubernetes_obs.json"
+#- name: create pool
+#  command: cephadm shell -- ceph osd pool create obj_data 4
+#  args:
+#    chdir: /root
+#- name: create map
+#  command: cephadm shell -- ceph osd map obj_data obj01
+#  args:
+#    chdir: /root
+#- name: set mon
+#  command: cephadm shell -- ceph config set mon auth_allow_insecure_global_id_reclaim false
+#  args:
+#    chdir: /root
+#  register: client_kubernetes_obs
+#- debug: msg="{{ client_kubernetes_obs }}"
+#- name: write to file
+#  ansible.builtin.copy:
+#    content: "{{ client_kubernetes_obs.stdout_lines }}"
+#    dest: "/nfs/ceph/client_kubernetes_obs.json"

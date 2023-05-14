@@ -11,11 +11,11 @@
   gather_facts: yes
   vars:
     nodes:
-    - { name: "node1", pri_ip: "172.16.0.31" }
-    - { name: "node2", pri_ip: "172.16.0.32" }
-    - { name: "node3", pri_ip: "172.16.0.33" }
-    - { name: "node4", pri_ip: "172.16.0.34" }  
-    - { name: "node5", pri_ip: "172.16.0.35" }      
+    - { name: "node1", pri_ip: "172.16.0.31", ids: "0" }
+    - { name: "node2", pri_ip: "172.16.0.32", ids: "1" }
+    - { name: "node3", pri_ip: "172.16.0.33", ids: "2" }
+    - { name: "node4", pri_ip: "172.16.0.34", ids: "3" }  
+    - { name: "node5", pri_ip: "172.16.0.35", ids: "4" }      
   roles:
     - ceph
 
